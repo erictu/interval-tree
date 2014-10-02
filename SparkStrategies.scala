@@ -98,7 +98,11 @@ private[sql] abstract class SparkStrategies extends QueryPlanner[SparkPlan] {
         joins.HashOuterJoin(
           leftKeys, rightKeys, joinType, condition, planLater(left), planLater(right)) :: Nil
 
-      case _ => Nil
+      case ExtractRangeJoinKeys(joinType, rangeJoinKeys, left, right) =>
+        execution.RangeJoin(planLater(left), planLater(right), rangeJoinKeys, sqlContext) :: Nil
+
+      case _ =>
+        Nil
     }
   }
 
