@@ -200,6 +200,13 @@ private[sql] abstract class SparkStrategies extends QueryPlanner[SparkPlan] {
     }
   }
 
+  object RangeJoin extends Strategy {
+    def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
+      case logical.RangeJoin(left, right, condition) =>
+        execution.RangeJoin(planLater(left), planLater(right), condition, sqlContext) :: Nil
+    }
+  }
+
   object ParquetOperations extends Strategy {
     def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
       // TODO: need to support writing to other types of files.  Unify the below code paths.
