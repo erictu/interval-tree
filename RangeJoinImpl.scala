@@ -41,11 +41,11 @@ object RangeJoinImpl extends Serializable {
     /* Collect only Reference regions and the index of indexedRdd1 */
     val localIntervals = indexedRdd1.map(x => (x._2._1, x._1)).collect()
     /* Create and broadcast an interval tree */
-    val intervalTree = sc.broadcast(new IntervalTree[Long](localIntervals.toList))
+    val intervalForest = sc.broadcast(new IntervalForest[Long](localIntervals.toList))
 
     val kvrdd2: RDD[(Long, Iterable[sql.Row])] = rdd2
       // join entry with the intervals returned from the interval tree
-      .map(x => (intervalTree.value.getAllOverlappings(x._1), x._2))
+      .map(x => (intervalForest.value.getAllOverlappings(x._1), x._2))
       .filter(x => x._1 != Nil) // filter out entries that do not join anywhere
       .flatMap(t => t._1.map(s => (s._2, t._2))) // create pairs of (index1, rdd2Elem)
       .groupByKey
