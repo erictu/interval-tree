@@ -28,7 +28,7 @@ class IntervalTreeSuite extends FunSuite {
 		var regions = new ListBuffer[(Interval[Long], Long)] 
 
 		for (start <- 1L to 1000L) {
-			val end = start + 500L
+			val end = start + 500L 
 			val interval = new Interval(start, end)
 
 			val readPair: (Interval[Long], Long) = (interval, start)
@@ -43,6 +43,7 @@ class IntervalTreeSuite extends FunSuite {
 		println("Matched Pairs: ")
 		println(matchedPairs.toString)
 		println(matchedPairs.length)
+		val insertInterval = new Interval(200L, 400L)
 		// println("IM HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
 	}
 

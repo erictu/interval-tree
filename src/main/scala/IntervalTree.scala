@@ -48,10 +48,36 @@ class IntervalTree[T](allRegions: List[(Interval[Long], T)]) extends Serializabl
       r.overlaps(Interval[Long](rt.centerPoint, rt.centerPoint + 1)))
   }
 
+  def insert(record: (Interval[Long], T)) = {
+    // Record Fields
+    val rStart = record._1.start
+    val rEnd = record._1.end
+    val rCenter = rStart + (rEnd - rStart) / 2
+
+    // Tree Fields
+    var current = root
+    var leftMin = root.leftChild.smallestPoint
+    var rightMax = root.rightChild.largestPoint
+    var center = leftMin + (rightMax - leftMin) / 2
+
+    while (current != null) {
+      if (rEnd < center) {
+        // Traverse left
+        current = current.leftChild
+      } else if (rStart > center) {
+        // Traverse right
+        current = current.rightChild
+      } else {
+        current.inclusiveIntervals= current.inclusiveIntervals:+record
+      }
+    }
+
+  }
+
   class Node(allRegions: List[(Interval[Long], T)]) extends Serializable {
     // println(allRegions)
-    private val largestPoint = allRegions.maxBy(_._1.end)._1.end
-    private val smallestPoint = allRegions.minBy(_._1.start)._1.start
+    val largestPoint = allRegions.maxBy(_._1.end)._1.end
+    val smallestPoint = allRegions.minBy(_._1.start)._1.start
     val centerPoint = smallestPoint + (largestPoint - smallestPoint) / 2
     var (inclusiveIntervals, leftChild, rightChild) = distributeRegions()
     val minPointOfCollection: Long = inclusiveIntervals match {
@@ -83,43 +109,5 @@ class IntervalTree[T](allRegions: List[(Interval[Long], T)]) extends Serializabl
       (centerRegions, leftChild, rightChild)
     }
 
-    def insert(record: (Interval[Long], T)) = {
-      // Record Fields
-      val rStart = record._1.start
-      val rEnd = record._1.end
-      val rCenter = rStart + (rEnd - rStart) / 2
-
-      // Tree Fields
-      var current: Option[Node] = null //Use this?
-      var leftMin = leftChild.smallestPoint
-      var rightMax = rightChild.largestPoint
-      var center = leftMin + (rightMax - leftMin) / 2
-
-      // First iteration, to make sure current is set
-      if (rEnd < center) {
-        // Traverse left
-        current = Option(current.get.leftChild)
-      } else if (rStart > center) {
-        // Traverse right
-        current = Option(current.get.leftChild)
-      } else {
-        current.get.inclusiveIntervals= current.get.inclusiveIntervals:+record
-      }
-
-      while (current.get != null) {
-        if (rEnd < center) {
-          // Traverse left
-          current = Option(current.get.leftChild)
-          // current.get.leftChild += record
-        } else if (rStart > center) {
-          // Traverse right
-          current = Option(current.get.rightChild)
-          // current.get.rightChild += record
-        } else {
-          current.get.inclusiveIntervals= current.get.inclusiveIntervals:+record
-        }
-      }
-
-    }
   }
 }
