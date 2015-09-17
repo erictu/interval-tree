@@ -38,7 +38,7 @@ class IntervalTreeSuite extends FunSuite {
 		}
 	}
 
-	test("insert ranodm regions to intervaltree") {
+	test("insert random regions to intervaltree") {
 		val tree = new IntervalTree[Long]()
 
 		val partitions = 10
@@ -88,8 +88,28 @@ class IntervalTreeSuite extends FunSuite {
 		tree.insert(readPair2)
 		tree.insert(readPair3)
 		val result: List[Long] = tree.search(new Interval(1500L, 2010L))
-		println(result.length)
 		assert(result.length == 1)
+	}
+
+	test("test for multiple overlaps during search") {
+		val tree = new IntervalTree[Long]()
+
+		val partitions = 10
+		var regions = new ListBuffer[(Interval[Long], Long)] 
+
+		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 2000L), 1)
+		val readPair2: (Interval[Long], Long) = (new Interval(0L, 1000L), 2)
+		val readPair3: (Interval[Long], Long) = (new Interval(2000L, 3000L), 1)
+		val readPair4: (Interval[Long], Long) = (new Interval(2010L, 4000L), 4)
+		val readPair5: (Interval[Long], Long) = (new Interval(2100L, 5000L), 3)
+
+		tree.insert(readPair1)
+		tree.insert(readPair2)
+		tree.insert(readPair3)
+		tree.insert(readPair4)
+		tree.insert(readPair5)
+		val result: List[Long] = tree.search(new Interval(900L, 2110L))
+		assert(result.length == 4)
 	}
 
 }

@@ -17,9 +17,8 @@
 
 package org.apache.intervaltree
 import scala.reflect.{ ClassTag, classTag }
-import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
 
-//class IntervalTree[T](allRegions: List[(Interval[Long], T)]) extends Serializable {
 class IntervalTree[T: ClassTag]() extends Serializable {
   var root: Node = null
 
@@ -66,35 +65,28 @@ class IntervalTree[T: ClassTag]() extends Serializable {
         }
       }
     }
-
     false
   }
 
   def search(r: Interval[Long]): List[T] = {
-    search(r, root).toList
+    search(r, root)
   } 
 
-  private def search(r: Interval[Long], n: Node): mutable.ListBuffer[T] = {
-
-    val results = new mutable.ListBuffer[T]()
-
+  private def search(r: Interval[Long], n: Node): List[T] = {
+    val results = new ListBuffer[T]()
     if (r.start <= n.hi && r.end >= n.lo) {
       results += n.value
     }
-
     if (n.subtreeMax < r.start) {
-      return results
+      return results.toList
     }
-
     if (n.leftChild != null) {
       results ++= search(r, n.leftChild)
     }
     if (n.rightChild != null) {
       results ++= search(r, n.rightChild)
     }
-
-    // TODO: remove duplicates
-    return results
+    return results.toList.distinct
   }
 
   class Node(r: (Interval[Long], T)) extends Serializable {
