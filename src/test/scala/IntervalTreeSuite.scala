@@ -23,7 +23,7 @@ import scala.collection.mutable.ListBuffer
 
 class IntervalTreeSuite extends FunSuite {
 
-	test("create intervaltree") {
+	test("create basic interval tree") {
 
 		var regions = new ListBuffer[(Interval[Long], Long)] 
 
@@ -36,6 +36,14 @@ class IntervalTreeSuite extends FunSuite {
 		}
 		val regionsList = regions.toList
 		val tree = new IntervalTree(regionsList)
+		// println(tree)
+		val searchInterval = new Interval(250L, 500L)
+		val matchedPairs: List[(Interval[Long], Long)] = tree.getAllOverlappings(searchInterval)
+		// println(matchedPairs)
+		println("Matched Pairs: ")
+		println(matchedPairs.toString)
+		println(matchedPairs.length)
+		// println("IM HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
 	}
 
 	test("search through intervaltree to get overlapping pairs") {
@@ -57,7 +65,7 @@ class IntervalTreeSuite extends FunSuite {
 
 		val matchedPairs: List[(Interval[Long], Long)] = tree.getAllOverlappings(searchInterval)
 
-		info(matchedPairs.toString)
+		// info(matchedPairs.toString)
 
 
 

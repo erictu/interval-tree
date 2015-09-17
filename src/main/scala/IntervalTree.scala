@@ -49,11 +49,11 @@ class IntervalTree[T](allRegions: List[(Interval[Long], T)]) extends Serializabl
   }
 
   class Node(allRegions: List[(Interval[Long], T)]) extends Serializable {
-    println(allRegions)
+    // println(allRegions)
     private val largestPoint = allRegions.maxBy(_._1.end)._1.end
     private val smallestPoint = allRegions.minBy(_._1.start)._1.start
     val centerPoint = smallestPoint + (largestPoint - smallestPoint) / 2
-    val (inclusiveIntervals, leftChild, rightChild) = distributeRegions()
+    var (inclusiveIntervals, leftChild, rightChild) = distributeRegions()
     val minPointOfCollection: Long = inclusiveIntervals match {
       case Nil => -1
       case _ => inclusiveIntervals.minBy(_._1.start)._1.start
@@ -81,6 +81,45 @@ class IntervalTree[T](allRegions: List[(Interval[Long], T)]) extends Serializabl
         case _ => new Node(rightRegions)
       }
       (centerRegions, leftChild, rightChild)
+    }
+
+    def insert(record: (Interval[Long], T)) = {
+      // Record Fields
+      val rStart = record._1.start
+      val rEnd = record._1.end
+      val rCenter = rStart + (rEnd - rStart) / 2
+
+      // Tree Fields
+      var current: Option[Node] = null //Use this?
+      var leftMin = leftChild.smallestPoint
+      var rightMax = rightChild.largestPoint
+      var center = leftMin + (rightMax - leftMin) / 2
+
+      // First iteration, to make sure current is set
+      if (rEnd < center) {
+        // Traverse left
+        current = Option(current.get.leftChild)
+      } else if (rStart > center) {
+        // Traverse right
+        current = Option(current.get.leftChild)
+      } else {
+        current.get.inclusiveIntervals= current.get.inclusiveIntervals:+record
+      }
+
+      while (current.get != null) {
+        if (rEnd < center) {
+          // Traverse left
+          current = Option(current.get.leftChild)
+          // current.get.leftChild += record
+        } else if (rStart > center) {
+          // Traverse right
+          current = Option(current.get.rightChild)
+          // current.get.rightChild += record
+        } else {
+          current.get.inclusiveIntervals= current.get.inclusiveIntervals:+record
+        }
+      }
+
     }
   }
 }
