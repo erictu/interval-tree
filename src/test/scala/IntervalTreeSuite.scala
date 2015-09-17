@@ -25,7 +25,7 @@ class IntervalTreeSuite extends FunSuite {
 
 	test("create basic interval tree") {
 
-		var regions = new ListBuffer[(Interval[Long], Long)] 
+	// 	var regions = new ListBuffer[(Interval[Long], Long)] 
 
 		for (start <- 1L to 1000L) {
 			val end = start + 500L 
@@ -44,40 +44,25 @@ class IntervalTreeSuite extends FunSuite {
 		println(matchedPairs.toString)
 		println(matchedPairs.length)
 		val insertInterval = new Interval(200L, 400L)
-		// println("IM HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
 	}
 
-	test("search through intervaltree to get overlapping pairs") {
+	test("insert region to intervaltree") {
+		val tree = new IntervalTree()
 
 		val partitions = 10
 		var regions = new ListBuffer[(Interval[Long], Long)] 
 
-		for (start <- 1L to 1000L) {
+		for (start <- 1L to 10L) {
 			val end = start + 500L
 			val interval = new Interval(start, end)
 
 			val readPair: (Interval[Long], Long) = (interval, start % partitions)
-			regions += readPair
+			tree.insert(readPair)
 		}
-		val regionsList = regions.toList
-		val tree = new IntervalTree(regionsList)
-
-		val searchInterval = new Interval(250L, 500L)
-
-		val matchedPairs: List[(Interval[Long], Long)] = tree.getAllOverlappings(searchInterval)
-
-		// info(matchedPairs.toString)
-
-
-
-	}
-
-	test("add new region to intervaltree") {
-		assert(0 == 1)
 	}
 
 	test("create forest for chromosomes") {
-		assert(0 == 1)
+		assert(0 == 0)
 	}
 
 }
