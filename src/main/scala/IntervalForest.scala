@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.intervaltree
+package com.github.akmorrow13.intervaltree
 
 class IntervalForest[T](allRegions: List[(Interval[Long], T)]) extends Serializable {
   //get all chromosome names and build a tree for each chromosome

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.intervaltree
+package com.github.akmorrow13.intervaltree
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
@@ -44,16 +44,16 @@ class IntervalTreeSuite extends FunSuite {
 		val partitions = 10
 		var regions = new ListBuffer[(Interval[Long], Long)] 
 
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 2000L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(0L, 1000L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(2000L, 3000L), 3)
+		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
+		val readPair2: (Interval[Long], Long) = (new Interval(0L, 999L), 2)
+		val readPair3: (Interval[Long], Long) = (new Interval(2000L, 2999L), 3)
 
 		tree.insert(readPair1)
 		tree.insert(readPair2)
 		tree.insert(readPair3)
 		val result: List[Long] = tree.search(new Interval(1000L, 2000L))
 		println(result.length)
-		assert(result.length == 3)
+		assert(result.length == 2)
 	}
 
 	test("search for interval with no overlaps") {
@@ -110,6 +110,22 @@ class IntervalTreeSuite extends FunSuite {
 		tree.insert(readPair5)
 		val result: List[Long] = tree.search(new Interval(900L, 2110L))
 		assert(result.length == 4)
+	}
+
+	test("do not insert overlaps in tree") {
+		val tree = new IntervalTree[Long]()
+
+		val partitions = 10
+		var regions = new ListBuffer[(Interval[Long], Long)] 
+
+		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
+		val readPair2: (Interval[Long], Long) = (new Interval(0L, 999L), 2)
+		val readPair3: (Interval[Long], Long) = (new Interval(0L, 999L), 1)
+
+		tree.insert(readPair1)
+		tree.insert(readPair2)
+		val inserted = tree.insert(readPair3)
+		assert(inserted == false)
 	}
 
 }

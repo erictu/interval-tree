@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.intervaltree
+package com.github.akmorrow13.intervaltree
 import scala.reflect.{ ClassTag, classTag }
 import scala.collection.mutable.ListBuffer
 
@@ -46,6 +46,7 @@ class IntervalTree[T: ClassTag]() extends Serializable {
     var search: Boolean = true
     while (search) {
       if (r._1.start < curr.lo) {
+        // traverse left subtree
         curr.subtreeMax = Math.max(curr.subtreeMax, r._1.end)
         parent = curr
         curr = curr.leftChild
@@ -54,7 +55,8 @@ class IntervalTree[T: ClassTag]() extends Serializable {
           parent.leftChild = curr
           search = false
         }
-      } else {
+      } else if (r._1.start > curr.lo) {
+        // traverse right subtree
         curr.subtreeMax = Math.max(curr.subtreeMax, r._1.end)
         parent = curr
         curr = curr.rightChild
@@ -63,6 +65,10 @@ class IntervalTree[T: ClassTag]() extends Serializable {
           parent.rightChild= curr
           search = false
         }
+      } else {
+        // block is a duplicate
+        if (r._1.end == curr.hi)
+        return false
       }
     }
     false
