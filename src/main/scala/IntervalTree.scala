@@ -22,6 +22,8 @@ import scala.collection.mutable.ListBuffer
 class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Serializable {
   var root: Node = null
 
+  //Default value
+  var chunkSize: Long = 10000
   // TODO: this isnt good syntax
   if (initial != null)
     insert(initial)
@@ -53,6 +55,18 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
       insert(node)
       insert(nodes.take(middle))
       insert(nodes.drop(middle + 1))
+    }
+  }
+
+  //Insert Via Block Size
+  //Should issue some request to fetch data correctly
+  def insert(r: (Interval[Long], T), chunkSize: Long): Boolean  = {
+    val length = r._1.end - r._1.start
+    if (length < chunkSize) {
+      val newPair: (Interval[Long], T) = (new Interval(r._1.start, r._1.start + chunkSize), r._2)
+      insert(newPair)
+    } else {
+      insert(r)
     }
   }
 
