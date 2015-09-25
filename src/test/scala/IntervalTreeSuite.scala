@@ -162,7 +162,7 @@ class IntervalTreeSuite extends FunSuite {
 	test("test minimum block size") {
 		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1011L), 1)
 		val tree = new IntervalTree[Long]()
-		tree.insert(readPair1, tree.chunkSize)
+		tree.insert(readPair1, 1000L)
 		val searchInterval: Interval[Long] = new Interval(1050L, 1100L)
 		val items = tree.search(searchInterval)
 		assert(items.length == 1)
