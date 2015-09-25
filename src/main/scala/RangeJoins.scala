@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.intervaltree
+package com.github.akmorrow13.intervaltree
 
 /*intervals with different groupId values do not overlap*/
 case class Interval[T <% Long](start: T, end: T, groupId: Option[String]=None) {

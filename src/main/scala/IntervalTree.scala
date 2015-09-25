@@ -15,111 +15,124 @@
  * limitations under the License.
  */
 
-package org.apache.intervaltree
+package com.github.akmorrow13.intervaltree
+import scala.reflect.{ ClassTag, classTag }
+import scala.collection.mutable.ListBuffer
 
-class IntervalTree[T](allRegions: List[(Interval[Long], T)]) extends Serializable {
+class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Serializable {
+  var root: Node = null
 
-  val root = new Node(allRegions)
+  // TODO: this isnt good syntax
+  if (initial != null)
+    insert(initial)
 
-  def getAllOverlappings(r: Interval[Long]) = allOverlappingRegions(r, root)
-
-  private def allOverlappingRegions(r: Interval[Long], rt: Node): List[(Interval[Long], T)] = {
-    if (rt == null) {
-      return Nil
-    }
-    val resultFromThisNode = r match {
-      case x if (rt.inclusiveIntervals == Nil) => Nil // Sometimes a node can have zero intervals
-      // Save unnecessary filtering
-      case x if (x.end < rt.minPointOfCollection || x.start > rt.maxPointOfCollection) => Nil
-      case _ => rt.inclusiveIntervals.filter(t => r.overlaps(t._1))
-    }
-    if (r.overlaps(Interval[Long](rt.centerPoint, rt.centerPoint + 1))) {
-      return resultFromThisNode ++ allOverlappingRegions(r, rt.leftChild) ++
-        allOverlappingRegions(r, rt.rightChild)
-    }
-    else if (r.end <= rt.centerPoint) {
-      return resultFromThisNode ++ allOverlappingRegions(r, rt.leftChild)
-    }
-    else if (r.start > rt.centerPoint) {
-      return resultFromThisNode ++ allOverlappingRegions(r, rt.rightChild)
-    }
-    else throw new NoSuchElementException("Interval Tree Exception. Illegal " +
-      "comparison for centerpoint " + rt.centerPoint + " " + r.toString + " cmp: " +
-      r.overlaps(Interval[Long](rt.centerPoint, rt.centerPoint + 1)))
+  def this() {
+    this(null)
   }
 
-  class Node(allRegions: List[(Interval[Long], T)]) extends Serializable {
-    // println(allRegions)
-    private val largestPoint = allRegions.maxBy(_._1.end)._1.end
-    private val smallestPoint = allRegions.minBy(_._1.start)._1.start
-    val centerPoint = smallestPoint + (largestPoint - smallestPoint) / 2
-    var (inclusiveIntervals, leftChild, rightChild) = distributeRegions()
-    val minPointOfCollection: Long = inclusiveIntervals match {
-      case Nil => -1
-      case _ => inclusiveIntervals.minBy(_._1.start)._1.start
-    }
-    val maxPointOfCollection: Long = inclusiveIntervals match {
-      case Nil => -1
-      case _ => inclusiveIntervals.maxBy(_._1.end)._1.end
-    }
+  def print() = {
+    printNode(root)
+  }
 
-    def distributeRegions() = {
-      var leftRegions: List[(Interval[Long], T)] = Nil
-      var rightRegions: List[(Interval[Long], T)] = Nil
-      var centerRegions: List[(Interval[Long], T)] = Nil
-      allRegions.foreach(x => {
-        if (x._1.end < centerPoint) leftRegions ::= x
-        else if (x._1.start > centerPoint) rightRegions ::= x
-        else centerRegions ::= x
-      } )
-      val leftChild: Node = leftRegions match {
-        case Nil => null
-        case _ => new Node(leftRegions)
+  def printNode(n: Node): Unit = {
+      println(n.lo, n.hi, n.subtreeMax)
+      if (n.leftChild != null) {
+        printNode(n.leftChild)
       }
-      val rightChild: Node = rightRegions match {
-        case Nil => null
-        case _ => new Node(rightRegions)
+      if (n.rightChild != null) {
+        printNode(n.rightChild)
       }
-      (centerRegions, leftChild, rightChild)
+  }
+
+  private def insertRecursive(nodes: List[(Interval[Long], T)]): Unit = {
+    if (!nodes.isEmpty) {
+      val count = nodes.length
+      val middle = count/2
+      val node = nodes(middle)
+
+      insert(node)
+      insert(nodes.take(middle))
+      insert(nodes.drop(middle + 1))
     }
+  }
 
-    def insert(record: (Interval[Long], T)) = {
-      // Record Fields
-      val rStart = record._1.start
-      val rEnd = record._1.end
-      val rCenter = rStart + (rEnd - rStart) / 2
+  def insert(r: List[(Interval[Long], T)]) = {
 
-      // Tree Fields
-      var current: Option[Node] = null //Use this?
-      var leftMin = leftChild.smallestPoint
-      var rightMax = rightChild.largestPoint
-      var center = leftMin + (rightMax - leftMin) / 2
+    val nodes = r.sortWith(_._1.start < _._1.start)
+    insertRecursive(nodes)
 
-      // First iteration, to make sure current is set
-      if (rEnd < center) {
-        // Traverse left
-        current = Option(current.get.leftChild)
-      } else if (rStart > center) {
-        // Traverse right
-        current = Option(current.get.leftChild)
-      } else {
-        current.get.inclusiveIntervals= current.get.inclusiveIntervals:+record
-      }
+  }
 
-      while (current.get != null) {
-        if (rEnd < center) {
-          // Traverse left
-          current = Option(current.get.leftChild)
-          // current.get.leftChild += record
-        } else if (rStart > center) {
-          // Traverse right
-          current = Option(current.get.rightChild)
-          // current.get.rightChild += record
-        } else {
-          current.get.inclusiveIntervals= current.get.inclusiveIntervals:+record
+  def insert(r: (Interval[Long], T)): Boolean  = {
+    if (root == null) {
+      root = new Node(r)
+      return true
+    }
+    var curr: Node = root
+    var parent: Node = null
+    var search: Boolean = true
+    while (search) {
+      if (r._1.start < curr.lo) {
+        // traverse left subtree
+        curr.subtreeMax = Math.max(curr.subtreeMax, r._1.end)
+        parent = curr
+        curr = curr.leftChild
+        if (curr == null) {
+          curr = new Node(r)
+          parent.leftChild = curr
+          search = false
         }
+      } else if (r._1.start > curr.lo) {
+        // traverse right subtree
+        curr.subtreeMax = Math.max(curr.subtreeMax, r._1.end)
+        parent = curr
+        curr = curr.rightChild
+        if (curr == null) {
+          curr = new Node(r)
+          parent.rightChild= curr
+          search = false
+        }
+      } else {
+        // block is a duplicate
+        if (r._1.end == curr.hi)
+        return false
       }
-
     }
+    false
   }
+
+  def search(r: Interval[Long]): List[T] = {
+    search(r, root)
+  } 
+
+  private def search(r: Interval[Long], n: Node): List[T] = {
+    val results = new ListBuffer[T]()
+    if (r.start <= n.hi && r.end >= n.lo) {
+      results += n.value
+    }
+    if (n.subtreeMax < r.start) {
+      return results.toList
+    }
+    if (n.leftChild != null) {
+      results ++= search(r, n.leftChild)
+    }
+    if (n.rightChild != null) {
+      results ++= search(r, n.rightChild)
+    }
+    return results.toList.distinct
+  }
+
+  private def rebalance() = {
+    // TODO
+  }
+
+  class Node(r: (Interval[Long], T)) extends Serializable {
+    val lo = r._1.start
+    val hi = r._1.end
+    var leftChild: Node = null
+    var rightChild: Node = null
+    var subtreeMax = hi
+    val value: T = r._2
+  }
+
 }
