@@ -19,8 +19,15 @@ package com.github.akmorrow13.intervaltree
 import scala.reflect.{ ClassTag, classTag }
 import scala.collection.mutable.ListBuffer
 
-class IntervalTree[T: ClassTag]() extends Serializable {
+class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Serializable {
   var root: Node = null
+
+  //Option(initial).foreach()
+  // TODO: construct tree from optional initial intervals
+
+  def this() {
+    this(null)
+  }
 
   def print() = {
     printNode(root)
@@ -34,6 +41,11 @@ class IntervalTree[T: ClassTag]() extends Serializable {
       if (n.rightChild != null) {
         printNode(n.rightChild)
       }
+  }
+
+  def insert(r: List[(Interval[Long], T)]): Boolean  = {
+    // TODO
+    return false
   }
 
   def insert(r: (Interval[Long], T)): Boolean  = {
@@ -93,6 +105,10 @@ class IntervalTree[T: ClassTag]() extends Serializable {
       results ++= search(r, n.rightChild)
     }
     return results.toList.distinct
+  }
+
+  private def rebalance() = {
+    // TODO: rebalance tree and squash nodes together
   }
 
   class Node(r: (Interval[Long], T)) extends Serializable {

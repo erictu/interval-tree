@@ -128,4 +128,9 @@ class IntervalTreeSuite extends FunSuite {
 		assert(inserted == false)
 	}
 
+	// TODO
+	// test: insert multiple
+	// test construct from list of intervals
+	// test reshaping and squashing
+
 }
