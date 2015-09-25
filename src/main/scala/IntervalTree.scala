@@ -22,8 +22,9 @@ import scala.collection.mutable.ListBuffer
 class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Serializable {
   var root: Node = null
 
-  //Option(initial).foreach()
-  // TODO: construct tree from optional initial intervals
+  // TODO: this isnt good syntax
+  if (initial != null)
+    insert(initial)
 
   def this() {
     this(null)
@@ -43,9 +44,23 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
       }
   }
 
-  def insert(r: List[(Interval[Long], T)]): Boolean  = {
-    // TODO
-    return false
+  private def insertRecursive(nodes: List[(Interval[Long], T)]): Unit = {
+    if (!nodes.isEmpty) {
+      val count = nodes.length
+      val middle = count/2
+      val node = nodes(middle)
+
+      insert(node)
+      insert(nodes.take(middle))
+      insert(nodes.drop(middle + 1))
+    }
+  }
+
+  def insert(r: List[(Interval[Long], T)]) = {
+
+    val nodes = r.sortWith(_._1.start < _._1.start)
+    insertRecursive(nodes)
+
   }
 
   def insert(r: (Interval[Long], T)): Boolean  = {
@@ -108,7 +123,7 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
   }
 
   private def rebalance() = {
-    // TODO: rebalance tree and squash nodes together
+    // TODO
   }
 
   class Node(r: (Interval[Long], T)) extends Serializable {
