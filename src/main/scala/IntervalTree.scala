@@ -21,6 +21,8 @@ import scala.collection.mutable.ListBuffer
 
 class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Serializable {
   var root: Node = null
+  var leftDepth: Long = 0
+  var rightDepth: Long = 0
 
   // TODO: this isnt good syntax
   if (initial != null)
@@ -36,6 +38,9 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
 
   def printNode(n: Node): Unit = {
       println(n.lo, n.hi, n.subtreeMax)
+      println(leftDepth)
+      println(rightDepth)
+      println(" ")
       if (n.leftChild != null) {
         printNode(n.leftChild)
       }
@@ -69,13 +74,21 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
   }
 
   def insert(r: List[(Interval[Long], T)]) = {
-
     val nodes = r.sortWith(_._1.start < _._1.start)
     insertRecursive(nodes)
 
   }
 
   def insert(r: (Interval[Long], T)): Boolean  = {
+    //TODO: make this an option
+    if (Math.abs(leftDepth - rightDepth) > 4) {
+      rebalance()
+      true //recreating entire tree, so return true
+    } else {
+      insertHelper(r)
+    }
+  }
+  def insertHelper(r: (Interval[Long], T)): Boolean  = {
     if (root == null) {
       root = new Node(r)
       return true
@@ -83,9 +96,22 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
     var curr: Node = root
     var parent: Node = null
     var search: Boolean = true
+    var leftSide: Boolean = false
+    var rightSide: Boolean = false
+    var tempLeftDepth: Long = 0
+    var tempRightDepth: Long = 0
+
     while (search) {
       if (r._1.start < curr.lo) {
         // traverse left subtree
+        if (!leftSide && !rightSide) {
+          leftSide = true
+        }
+        if (rightSide) {
+          tempRightDepth += 1
+        } else if (leftSide) {
+          tempLeftDepth += 1
+        }
         curr.subtreeMax = Math.max(curr.subtreeMax, r._1.end)
         parent = curr
         curr = curr.leftChild
@@ -96,6 +122,14 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
         }
       } else if (r._1.start > curr.lo) {
         // traverse right subtree
+        if (!leftSide && !rightSide) {
+          rightSide = true
+        }
+        if (rightSide) {
+          tempRightDepth += 1
+        } else if (leftSide) {
+          tempLeftDepth += 1
+        }
         curr.subtreeMax = Math.max(curr.subtreeMax, r._1.end)
         parent = curr
         curr = curr.rightChild
@@ -110,7 +144,12 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
         return false
       }
     }
-    false
+    if (tempLeftDepth > leftDepth) {
+      leftDepth = tempLeftDepth
+    } else if (tempRightDepth > rightDepth) {
+      rightDepth = tempRightDepth
+    }
+    true
   }
 
   def search(r: Interval[Long]): List[T] = {
@@ -134,8 +173,26 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
     return results.toList.distinct
   }
 
-  private def rebalance() = {
-    // TODO
+  //currently gets an inorder list of the tree, then bulk constructs a new tree
+  def rebalance() = {
+    val inOrderedList: List[(Interval[Long], T)] = inOrder(root)
+    println(inOrderedList)
+    root = null
+    insert(inOrderedList)
+
+  }
+
+  def inOrder(n: Node): List[(Interval[Long], T)]  = {
+    val seen = new ListBuffer[(Interval[Long], T)]()
+    if (n.leftChild != null) {
+      seen ++= inOrder(n.leftChild)
+    }
+    val insertElem: (Interval[Long], T) = (new Interval(n.lo, n.hi), n.value)
+    seen += insertElem
+    if (n.rightChild != null) {
+      seen ++= inOrder(n.rightChild)
+    }
+    return seen.toList
   }
 
   class Node(r: (Interval[Long], T)) extends Serializable {

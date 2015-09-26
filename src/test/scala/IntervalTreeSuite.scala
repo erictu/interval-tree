@@ -170,7 +170,35 @@ class IntervalTreeSuite extends FunSuite {
 
 	// test reshaping and squashing
 	test("correctly rebalance tree") {
-		assert(0 == 1)
+		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
+		val readPair2: (Interval[Long], Long) = (new Interval(2000L, 2999L), 2)
+		val readPair3: (Interval[Long], Long) = (new Interval(500L, 999L), 3)
+		val readPair4: (Interval[Long], Long) = (new Interval(3000L, 3999L), 4)
+		val readPair5: (Interval[Long], Long) = (new Interval(4000L, 4999L), 5)
+		val readPair6: (Interval[Long], Long) = (new Interval(5000L, 5999L), 6)
+		val readPair7: (Interval[Long], Long) = (new Interval(0L, 499L), 7)
+
+		val tree = new IntervalTree[Long]()
+
+		// val readPairs: List[(Interval[Long], Long)] = List(readPair1, readPair2, readPair3,
+		// 	readPair4, readPair5, readPair6)
+		tree.insert(readPair1)
+		tree.insert(readPair2)
+		tree.insert(readPair3)
+		tree.insert(readPair4)
+		tree.insert(readPair5)
+		tree.insert(readPair6)
+		tree.insert(readPair7)
+
+		println("done inserting")
+		// val searchInterval: Interval[Long] = new Interval(500L, 1500L)
+		// val items = tree.search(searchInterval)
+		// println(items)
+		tree.print()
+		println()
+		println("rebalance")
+		tree.rebalance()
+		tree.print()
 	}
 
 	// test reshaping and squashing
