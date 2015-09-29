@@ -19,17 +19,20 @@ package com.github.akmorrow13.intervaltree
 import scala.reflect.{ ClassTag, classTag }
 import scala.collection.mutable.ListBuffer
 
-class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Serializable {
+class IntervalTree[T: ClassTag] extends Serializable {
   var root: Node = null
   var leftDepth: Long = 0
   var rightDepth: Long = 0
 
-  // TODO: this isnt good syntax
-  if (initial != null)
-    insert(initial)
+  def IntervalTree() = { 
+    root = null
+  }
 
-  def this() {
-    this(null)
+  def IntervalTree(initial: List[(Interval[Long], T)]) = {
+    insert(initial)
+  }
+  def size(): Long = {
+    return 0
   }
 
   def print() = {
@@ -76,7 +79,12 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
   def insert(r: List[(Interval[Long], T)]) = {
     val nodes = r.sortWith(_._1.start < _._1.start)
     insertRecursive(nodes)
+  }
 
+  def insert(start: Long, end: Long, data: T): Boolean = {
+    val interval = new Interval(start, end)
+    val r = (interval, data)
+    return insert(r)
   }
 
   def insert(r: (Interval[Long], T)): Boolean  = {
@@ -88,6 +96,7 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
       insertHelper(r)
     }
   }
+  
   def insertHelper(r: (Interval[Long], T)): Boolean  = {
     if (root == null) {
       root = new Node(r)

@@ -18,10 +18,15 @@
 package com.github.akmorrow13.intervaltree
 
 /*intervals with different groupId values do not overlap*/
-case class Interval[T <% Long](start: T, end: T, groupId: Option[String]=None) {
+class Interval[T <% Long](start: T, end: T, groupId: Option[String]=None) {
   def overlaps(other: Interval[T]): Boolean = {
     (groupId == other.groupId) &&
     (end >= start) && (other.end >= other.start) &&
       (end > other.start && start < other.end)
+  }
+  def overlaps(nstart: T, nend:T, ngroupId: Option[String]=None): Boolean = {
+    (groupId == ngroupId) &&
+    (end >= start) && (nend >= nstart) &&
+      (end > nstart && start < nend)
   }
 }
