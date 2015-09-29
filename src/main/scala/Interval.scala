@@ -24,4 +24,9 @@ case class Interval[T <% Long](start: T, end: T, groupId: Option[String]=None) {
     (end >= start) && (other.end >= other.start) &&
       (end > other.start && start < other.end)
   }
+  def overlaps(nstart: T, nend:T, ngroupId: Option[String]=None): Boolean = {
+    (groupId == ngroupId) &&
+    (end >= start) && (nend >= nstart) &&
+      (end > nstart && start < nend)
+  }
 }

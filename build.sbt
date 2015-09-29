@@ -18,3 +18,6 @@ libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.2" % "test"
 javaOptions in test += "-Xmx2G"
 
 fork in test := true
+
+javaOptions += "-Xmx10G"
+

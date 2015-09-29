@@ -19,24 +19,24 @@ package com.github.akmorrow13.intervaltree
 import scala.reflect.{ ClassTag, classTag }
 import scala.collection.mutable.ListBuffer
 
-class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Serializable {
-  var root: Node = null
+class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
+  var root: Node[K, T] = null
   var leftDepth: Long = 0
   var rightDepth: Long = 0
 
-  // TODO: this isnt good syntax
-  if (initial != null)
-    insert(initial)
+  def IntervalTree() = { 
+    root = null
+  }
 
-  def this() {
-    this(null)
+  def IntervalTree(initial: List[(Interval[Long], K, T)]) = {
+    insert(initial)
   }
 
   def print() = {
     printNode(root)
   }
 
-  def printNode(n: Node): Unit = {
+  def printNode(n: Node[K, T]): Unit = {
       println(n.lo, n.hi, n.subtreeMax)
       println(leftDepth)
       println(rightDepth)
@@ -49,7 +49,7 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
       }
   }
 
-  private def insertRecursive(nodes: List[(Interval[Long], T)]): Unit = {
+  private def insertRecursive(nodes: List[(Interval[Long], Long, T)]): Unit = {
     if (!nodes.isEmpty) {
       val count = nodes.length
       val middle = count/2
@@ -76,25 +76,32 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
   def insert(r: List[(Interval[Long], T)]) = {
     val nodes = r.sortWith(_._1.start < _._1.start)
     insertRecursive(nodes)
+  }
 
+  def insert(start: Long, end: Long, data: T): Boolean = {
+    val interval = new Interval(start, end)
+    val r = (interval, data)
+    return insert(r)
   }
 
   def insert(r: (Interval[Long], T)): Boolean  = {
     //TODO: make this an option
     if (Math.abs(leftDepth - rightDepth) > 4) {
+      insertHelper(r)
       rebalance()
       true //recreating entire tree, so return true
     } else {
       insertHelper(r)
     }
   }
+
   def insertHelper(r: (Interval[Long], T)): Boolean  = {
     if (root == null) {
-      root = new Node(r)
+      root = new Node[K, T](r)
       return true
     }
-    var curr: Node = root
-    var parent: Node = null
+    var curr: Node[K, T] = root
+    var parent: Node[K, T] = null
     var search: Boolean = true
     var leftSide: Boolean = false
     var rightSide: Boolean = false
@@ -102,7 +109,7 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
     var tempRightDepth: Long = 0
 
     while (search) {
-      if (r._1.start < curr.lo) {
+      if (curr.greaterThan(r)) {
         // traverse left subtree
         if (!leftSide && !rightSide) {
           leftSide = true
@@ -120,7 +127,7 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
           parent.leftChild = curr
           search = false
         }
-      } else if (r._1.start > curr.lo) {
+      } else if (curr.lessThan(r)) {
         // traverse right subtree
         if (!leftSide && !rightSide) {
           rightSide = true
@@ -140,7 +147,7 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
         }
       } else {
         // block is a duplicate
-        if (r._1.end == curr.hi)
+        if (curr.equals(r))
         return false
       }
     }
@@ -156,9 +163,9 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
     search(r, root)
   } 
 
-  private def search(r: Interval[Long], n: Node): List[T] = {
+  private def search(r: Interval[Long], n: Node[T]): List[T] = {
     val results = new ListBuffer[T]()
-    if (r.start <= n.hi && r.end >= n.lo) {
+    if (n.overlaps(r)) {
       results += n.value
     }
     if (n.subtreeMax < r.start) {
@@ -182,7 +189,7 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
 
   }
 
-  def inOrder(n: Node): List[(Interval[Long], T)]  = {
+  def inOrder(n: Node[T]): List[(Interval[Long], T)]  = {
     val seen = new ListBuffer[(Interval[Long], T)]()
     if (n.leftChild != null) {
       seen ++= inOrder(n.leftChild)
@@ -193,15 +200,6 @@ class IntervalTree[T: ClassTag](initial: List[(Interval[Long], T)]) extends Seri
       seen ++= inOrder(n.rightChild)
     }
     return seen.toList
-  }
-
-  class Node(r: (Interval[Long], T)) extends Serializable {
-    val lo = r._1.start
-    val hi = r._1.end
-    var leftChild: Node = null
-    var rightChild: Node = null
-    var subtreeMax = hi
-    val value: T = r._2
   }
 
 }
