@@ -17,6 +17,50 @@
 
 package com.github.akmorrow13.intervaltree
 
-class Node[T <% Long](start: T, end: T, groupId: Option[String]=None) {
+import collection.mutable.HashMap
+import scala.collection.mutable.ListBuffer
+
+class Node[K, T](r: Interval[Long]) {
+  val lo = r.start
+  val hi = r.end
+  var leftChild: Node[K, T] = null
+  var rightChild: Node[T] = null
+  var subtreeMax = hi
+  var dataMap: HashMap[K, T] = new HashMap() 
+
+
+  def greaterThan(r: Interval[Long]): Boolean = {
+    return lo > r.start 
+  }
+
+  def lessThan(r: Interval[Long]): Boolean = {
+    return lo < r.start 
+  }
+
+  def overlaps(r: Interval[Long]): Boolean = {
+    return r.start <= hi && r.end >= lo
+  }
+
+  def equals(r: Interval[Long]): Boolean = {
+    return r.start == lo && r.end == hi
+  }
+
+  def multiput(rs: List[(K, T)]) = {
+    rs.foreach(r => put(r._1, r._2) )
+  }
+
+  def put(id: Long, data: T) = {
+    dataMap += (id -> data)
+  }
+
+  def multiget(ids: List[K]): List[T] = {
+    var data = new ListBuffer[T]()
+    ids.foreach(data += get(_))
+    data.toList
+  }
+
+  def get(id: K): T = {
+    dataMap(id)
+  }
 
 }
