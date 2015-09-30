@@ -24,7 +24,7 @@ class Node[K, T](r: Interval[Long]) {
   val lo = r.start
   val hi = r.end
   var leftChild: Node[K, T] = null
-  var rightChild: Node[T] = null
+  var rightChild: Node[K, T] = null
   var subtreeMax = hi
   var dataMap: HashMap[K, T] = new HashMap() 
 
@@ -49,18 +49,17 @@ class Node[K, T](r: Interval[Long]) {
     rs.foreach(r => put(r._1, r._2) )
   }
 
-  def put(id: Long, data: T) = {
+  def put(id: K, data: T) = {
     dataMap += (id -> data)
   }
 
-  def multiget(ids: List[K]): List[T] = {
-    var data = new ListBuffer[T]()
-    ids.foreach(data += get(_))
+  def multiget(ids: List[K]): List[(K,T)] = {
+    var data = new ListBuffer[(K,T)]()
+    ids.foreach( r => (data += (get(r)))) 
     data.toList
   }
 
-  def get(id: K): T = {
-    dataMap(id)
-  }
+  def getAll(): List[(K, T)] = dataMap.toList
 
+  def get(id: K): (K,T) = (id, dataMap(id))
 }

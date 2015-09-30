@@ -159,23 +159,32 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     true
   }
 
-  def search(r: Interval[Long]): List[T] = {
-    search(r, root)
+  /* serches for single interval over single id */
+  def search(r: Interval[Long], id: K): List[(K, T)] = {
+    search(r, root, Option(List(id)))
   } 
 
-  private def search(r: Interval[Long], n: Node[T]): List[T] = {
-    val results = new ListBuffer[T]()
+  /* searches for single interval over multiple ids */
+  def search(r: Interval[Long], ids: Option[List[K]]): List[(K, T)] = {
+    search(r, root, ids)
+  } 
+
+  private def search(r: Interval[Long], n: Node[K, T], id: Option[List[K]]): List[(K, T)] = {
+    val results = new ListBuffer[(K, T)]()
     if (n.overlaps(r)) {
-      results += n.value
+      id match {
+        case Some(id) => results ++= n.multiget(id)
+        case None     => results ++= n.getAll()
+      }
     }
     if (n.subtreeMax < r.start) {
       return results.toList
     }
     if (n.leftChild != null) {
-      results ++= search(r, n.leftChild)
+      results ++= search(r, n.leftChild, id)
     }
     if (n.rightChild != null) {
-      results ++= search(r, n.rightChild)
+      results ++= search(r, n.rightChild, id)
     }
     return results.toList.distinct
   }
