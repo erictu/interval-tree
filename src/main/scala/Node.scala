@@ -29,20 +29,26 @@ class Node[K, T](r: Interval[Long]) {
   var dataMap: HashMap[K, T] = new HashMap() 
 
 
-  def greaterThan(r: Interval[Long]): Boolean = {
-    return lo > r.start 
+  def this(id: K, r: (Interval[Long], T)) = {
+    this(r._1)
+    put(id, r._2)
   }
 
-  def lessThan(r: Interval[Long]): Boolean = {
-    return lo < r.start 
+  def greaterThan(r: (Interval[Long], T)): Boolean = {
+    return lo > r._1.start 
   }
 
+  def lessThan(r: (Interval[Long], T)): Boolean = {
+    return lo < r._1.start 
+  }
+
+  //Only used in search, so no data value
   def overlaps(r: Interval[Long]): Boolean = {
     return r.start <= hi && r.end >= lo
   }
 
-  def equals(r: Interval[Long]): Boolean = {
-    return r.start == lo && r.end == hi
+  def equals(r: (Interval[Long], T)): Boolean = {
+    return r._1.start == lo && r._1.end == hi
   }
 
   def multiput(rs: List[(K, T)]) = {
@@ -55,7 +61,7 @@ class Node[K, T](r: Interval[Long]) {
 
   def multiget(ids: List[K]): List[(K,T)] = {
     var data = new ListBuffer[(K,T)]()
-    ids.foreach( r => (data += (get(r)))) 
+    ids.foreach(data += get(_))
     data.toList
   }
 
