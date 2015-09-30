@@ -23,186 +23,80 @@ import scala.collection.mutable.ListBuffer
 
 class IntervalTreeSuite extends FunSuite {
 
-	test("insert region to intervaltree") {
-		val tree = new IntervalTree[Long]()
+	test("insert regions to intervaltree for only one entity") {
+		val tree = new IntervalTree[Long, Long]()
 
 		val partitions = 10
 		var regions = new ListBuffer[(Interval[Long], Long)] 
 
+		val id = 1L
 		for (start <- 1L to 6L) {
 			val end = start + 500L
 			val interval = new Interval(start, end)
 			val partition: Long = start % partitions
 			val readPair: (Interval[Long], Long) = (interval, partition)
-			tree.insert(readPair)
+			tree.insert(id, readPair)
 		}
+
+		assert(tree.size() == 6)
 	}
 
-	test("insert random regions to intervaltree") {
-		val tree = new IntervalTree[Long]()
+	test("insert different ids into same node, tests search all and search 1") {
+		val tree = new IntervalTree[Long, Long]()
 
 		val partitions = 10
 		var regions = new ListBuffer[(Interval[Long], Long)] 
 
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(0L, 999L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(2000L, 2999L), 3)
+		val start = 0L
+		val end = 1000L
+		val interval = new Interval(start, end)
 
-		tree.insert(readPair1)
-		tree.insert(readPair2)
-		tree.insert(readPair3)
-		val result: List[Long] = tree.search(new Interval(1000L, 2000L))
-		println(result.length)
-		assert(result.length == 2)
+		for (id <- 1L to 6L) {
+			val partition: Long = start % partitions
+			val readPair: (Interval[Long], Long) = (interval, partition)
+			tree.insert(id, readPair)
+		}
+
+		var searchOne: List[(Long, Long)] = tree.search(interval, 1L)
+		assert(searchOne.size == 1)
+
+		// search for all
+		var searchAll: List[(Long, Long)] = tree.search(interval)
+		assert(searchAll.size == 6)
+
+		assert(tree.size() == 1)		
 	}
 
-	test("search for interval with no overlaps") {
-		val tree = new IntervalTree[Long]()
+	test("search for only some ids") {
+		val tree = new IntervalTree[Long, Long]()
 
-		val partitions = 10
 		var regions = new ListBuffer[(Interval[Long], Long)] 
 
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 2000L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(0L, 1000L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(2000L, 3000L), 3)
+		val start = 0L
+		val end = 1000L
+		val interval = new Interval(start, end)
 
-		tree.insert(readPair1)
-		tree.insert(readPair2)
-		tree.insert(readPair3)
-		val result: List[Long] = tree.search(new Interval(5000L, 7000L))
-		println(result.length)
-		assert(result.length == 0)
+		for (id <- 1L to 6L) {
+			val partition: Long = id
+			val readPair: (Interval[Long], Long) = (interval, partition)
+			tree.insert(id, readPair)
+		}
+
+		// create multiple ids to be searched
+		val ids: List[Long] = List(1L, 3L, 5L)
+		val searchSome: List[(Long, Long)] = tree.search(interval, ids)	
+		assert(searchSome.contains((1L, 1L)) == true)
+		assert(searchSome.contains((3L, 3L)) == true)
+		assert(searchSome.contains((3L, 3L)) == true)
+
 	}
 
-	test("test for overlap removal during search") {
-		val tree = new IntervalTree[Long]()
+	test("insert ids in bulk") {
+		assert(0 == 1)
 
-		val partitions = 10
-		var regions = new ListBuffer[(Interval[Long], Long)] 
-
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 2000L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(0L, 1000L), 1)
-		val readPair3: (Interval[Long], Long) = (new Interval(2000L, 3000L), 1)
-
-		tree.insert(readPair1)
-		tree.insert(readPair2)
-		tree.insert(readPair3)
-		val result: List[Long] = tree.search(new Interval(1500L, 2010L))
-		assert(result.length == 1)
 	}
 
-	test("test for multiple overlaps during search") {
-		val tree = new IntervalTree[Long]()
-
-		val partitions = 10
-		var regions = new ListBuffer[(Interval[Long], Long)] 
-
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 2000L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(0L, 1000L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(2000L, 3000L), 1)
-		val readPair4: (Interval[Long], Long) = (new Interval(2010L, 4000L), 4)
-		val readPair5: (Interval[Long], Long) = (new Interval(2100L, 5000L), 3)
-
-		tree.insert(readPair1)
-		tree.insert(readPair2)
-		tree.insert(readPair3)
-		tree.insert(readPair4)
-		tree.insert(readPair5)
-		val result: List[Long] = tree.search(new Interval(900L, 2110L))
-		assert(result.length == 4)
-	}
-
-	test("do not insert overlaps in tree") {
-		val tree = new IntervalTree[Long]()
-
-		val partitions = 10
-		var regions = new ListBuffer[(Interval[Long], Long)] 
-
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(0L, 999L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(0L, 999L), 1)
-
-		tree.insert(readPair1)
-		tree.insert(readPair2)
-		val inserted = tree.insert(readPair3)
-		assert(inserted == false)
-	}
-
-	test("insert multiple elements into tree") {
-		val tree = new IntervalTree[Long]()
-
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(2000L, 2999L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(0L, 999L), 3)
-
-		val readPairs: List[(Interval[Long], Long)] = List(readPair1, readPair2, readPair3)
-		tree.insert(readPairs)
-
-		val searchInterval: Interval[Long] = new Interval(500L, 2040)
-		val items = tree.search(searchInterval)
-		assert(items.length ==  3)
-	}
-
-	// test construct from list of intervals
-	test("create a tree from multiple elements") {
-
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(2000L, 2999L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(0L, 999L), 3)
-
-		val readPairs: List[(Interval[Long], Long)] = List(readPair1, readPair2, readPair3)
-		// val tree: IntervalTree[Long] = new IntervalTree(readPairs)
-
-		// val searchInterval: Interval[Long] = new Interval(500L, 2002)
-		// val items = tree.search(searchInterval)
-		// assert(items.length ==  3)
-	}
-
-	//test minimum block size
-	test("test minimum block size") {
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1011L), 1)
-		val tree = new IntervalTree[Long]()
-		tree.insert(readPair1, 1000L)
-		val searchInterval: Interval[Long] = new Interval(1050L, 1100L)
-		val items = tree.search(searchInterval)
-		assert(items.length == 1)
-	}
-
-	// test reshaping and squashing
-	test("correctly rebalance tree") {
-		val readPair1: (Interval[Long], Long) = (new Interval(1000L, 1999L), 1)
-		val readPair2: (Interval[Long], Long) = (new Interval(2000L, 2999L), 2)
-		val readPair3: (Interval[Long], Long) = (new Interval(500L, 999L), 3)
-		val readPair4: (Interval[Long], Long) = (new Interval(3000L, 3999L), 4)
-		val readPair5: (Interval[Long], Long) = (new Interval(4000L, 4999L), 5)
-		val readPair6: (Interval[Long], Long) = (new Interval(5000L, 5999L), 6)
-		val readPair7: (Interval[Long], Long) = (new Interval(0L, 499L), 7)
-
-		val tree = new IntervalTree[Long]()
-
-		// val readPairs: List[(Interval[Long], Long)] = List(readPair1, readPair2, readPair3,
-		// 	readPair4, readPair5, readPair6)
-		tree.insert(readPair1)
-		tree.insert(readPair2)
-		tree.insert(readPair3)
-		tree.insert(readPair4)
-		tree.insert(readPair5)
-		tree.insert(readPair6)
-		tree.insert(readPair7)
-
-		println("done inserting")
-		// val searchInterval: Interval[Long] = new Interval(500L, 1500L)
-		// val items = tree.search(searchInterval)
-		// println(items)
-		tree.print()
-		println()
-		println("rebalance")
-		tree.rebalance()
-		tree.print()
-	}
-
-	// test reshaping and squashing
-	test("correctly squash nodes in tree") {
+	test("rebalancing tree") {
 		assert(0 == 1)
 	}
 }
