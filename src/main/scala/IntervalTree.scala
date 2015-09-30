@@ -28,7 +28,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     root = null
   }
 
-  def IntervalTree(initial: List[(Interval[Long], K, T)]) = {
+  def IntervalTree(initial: List[(Interval[Long], T)]) = {
     insert(initial)
   }
 
@@ -49,7 +49,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
       }
   }
 
-  private def insertRecursive(nodes: List[(Interval[Long], Long, T)]): Unit = {
+  private def insertRecursive(nodes: List[(Interval[Long], T)]): Unit = {
     if (!nodes.isEmpty) {
       val count = nodes.length
       val middle = count/2
@@ -163,10 +163,10 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     search(r, root)
   } 
 
-  private def search(r: Interval[Long], n: Node[T]): List[T] = {
+  private def search(r: Interval[Long], n: Node[K, T]): List[T] = {
     val results = new ListBuffer[T]()
     if (n.overlaps(r)) {
-      results += n.value
+      results += n.getValue() //TODO: What do we even return?
     }
     if (n.subtreeMax < r.start) {
       return results.toList
@@ -189,12 +189,12 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
 
   }
 
-  def inOrder(n: Node[T]): List[(Interval[Long], T)]  = {
+  def inOrder(n: Node[K, T]): List[(Interval[Long], T)]  = {
     val seen = new ListBuffer[(Interval[Long], T)]()
     if (n.leftChild != null) {
       seen ++= inOrder(n.leftChild)
     }
-    val insertElem: (Interval[Long], T) = (new Interval(n.lo, n.hi), n.value)
+    val insertElem: (Interval[Long], T) = (new Interval(n.lo, n.hi), n.getValue()) //TODO: 
     seen += insertElem
     if (n.rightChild != null) {
       seen ++= inOrder(n.rightChild)
