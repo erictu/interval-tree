@@ -27,17 +27,15 @@ class IntervalTreeSuite extends FunSuite {
 		val tree = new IntervalTree[Long, Long]()
 
 		val partitions = 10
-		var regions = new ListBuffer[(Interval[Long], Long)] 
 
 		val id = 1L
 		for (start <- 1L to 6L) {
 			val end = start + 500L
+
 			val interval = new Interval(start, end)
 			val partition: Long = start % partitions
-			val readPair: (Interval[Long], Long) = (interval, partition)
-			tree.insert(id, readPair)
+			tree.insert(interval, (id, partition))
 		}
-
 		assert(tree.size() == 6)
 	}
 
@@ -45,7 +43,6 @@ class IntervalTreeSuite extends FunSuite {
 		val tree = new IntervalTree[Long, Long]()
 
 		val partitions = 10
-		var regions = new ListBuffer[(Interval[Long], Long)] 
 
 		val start = 0L
 		val end = 1000L
@@ -53,8 +50,7 @@ class IntervalTreeSuite extends FunSuite {
 
 		for (id <- 1L to 6L) {
 			val partition: Long = start % partitions
-			val readPair: (Interval[Long], Long) = (interval, partition)
-			tree.insert(id, readPair)
+			tree.insert(interval, (id, partition))
 		}
 
 		var searchOne: List[(Long, Long)] = tree.search(interval, 1L)
@@ -70,16 +66,13 @@ class IntervalTreeSuite extends FunSuite {
 	test("search for only some ids") {
 		val tree = new IntervalTree[Long, Long]()
 
-		var regions = new ListBuffer[(Interval[Long], Long)] 
-
 		val start = 0L
 		val end = 1000L
 		val interval = new Interval(start, end)
 
 		for (id <- 1L to 6L) {
 			val partition: Long = id
-			val readPair: (Interval[Long], Long) = (interval, partition)
-			tree.insert(id, readPair)
+			tree.insert(interval, (id, partition))
 		}
 
 		// create multiple ids to be searched
@@ -91,12 +84,30 @@ class IntervalTreeSuite extends FunSuite {
 
 	}
 
-	test("insert ids in bulk") {
-		assert(0 == 1)
+	test("insert ids in bulk with same interval") {
+		val tree = new IntervalTree[Long, Long]()
+
+		val r: List[(Long, Long)] = List((1L, 2L), (3L, 4L), (5L, 6L))
+
+		val i: Interval[Long] = new Interval(0, 1000)
+
+		tree.insert(i, r)
+
+		assert(tree.size == 1)
+		assert(tree.search(i).size == 3)
 
 	}
 
 	test("rebalancing tree") {
-		assert(0 == 1)
+		val tree = new IntervalTree[Long, Long]()
+
+		for (id <- 1L to 50L) {
+			val partition: Long = id
+			val interval = new Interval(id + 7L, id + 1000L)
+			tree.insert(interval, (id, partition))
+		}
+
+		assert(tree.rightDepth - tree.leftDepth <= 5)
+
 	}
 }

@@ -21,35 +21,29 @@ import collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 
 class Node[K, T](r: Interval[Long]) {
-  val lo = r.start
-  val hi = r.end
+  val interval = r
   var leftChild: Node[K, T] = null
   var rightChild: Node[K, T] = null
-  var subtreeMax = hi
+  var subtreeMax = interval.end
   var dataMap: HashMap[K, T] = new HashMap() 
 
-
-  def this(id: K, r: (Interval[Long], T)) = {
-    this(r._1)
-    put(id, r._2)
+  def this(i: Interval[Long], k: K, t: T) = {
+    this(i)
+    put(k, t)
   }
 
-  def greaterThan(r: (Interval[Long], T)): Boolean = {
-    return lo > r._1.start 
+  def clearChildren() = {
+    leftChild = null
+    rightChild = null
   }
 
-  def lessThan(r: (Interval[Long], T)): Boolean = {
-    return lo < r._1.start 
-  }
+  def greaterThan(r: Interval[Long]): Boolean = interval.greaterThan(r)
 
-  //Only used in search, so no data value
-  def overlaps(r: Interval[Long]): Boolean = {
-    return r.start <= hi && r.end >= lo
-  }
+  def lessThan(r: Interval[Long]): Boolean = interval.lessThan(r)
 
-  def equals(r: (Interval[Long], T)): Boolean = {
-    return r._1.start == lo && r._1.end == hi
-  }
+  def overlaps(r: Interval[Long]): Boolean = interval.overlaps(r)
+
+  def equals(r: Interval[Long]): Boolean = interval.equals(r)
 
   def multiput(rs: List[(K, T)]) = {
     rs.foreach(r => put(r._1, r._2) )
@@ -59,13 +53,13 @@ class Node[K, T](r: Interval[Long]) {
     dataMap += (id -> data)
   }
 
+  def get(id: K): (K,T) = (id, dataMap(id))
+
+  def getAll(): List[(K, T)] = dataMap.toList
+
   def multiget(ids: List[K]): List[(K,T)] = {
     var data = new ListBuffer[(K,T)]()
     ids.foreach(data += get(_))
     data.toList
   }
-
-  def getAll(): List[(K, T)] = dataMap.toList
-
-  def get(id: K): (K,T) = (id, dataMap(id))
 }
