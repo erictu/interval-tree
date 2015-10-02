@@ -89,7 +89,7 @@ class IntervalTreeSuite extends FunSuite {
 
 		val r: List[(Long, Long)] = List((1L, 2L), (3L, 4L), (5L, 6L))
 
-		val i: Interval[Long] = new Interval(0, 1000
+		val i: Interval[Long] = new Interval(0, 1000)
 
 		tree.insert(i, r)
 
