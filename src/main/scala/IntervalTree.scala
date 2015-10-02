@@ -27,6 +27,14 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
   val threshold = 4
   var nodeCount: Long = 0
 
+  def snapshot(): IntervalTree[K, T] = {
+    val newTree: IntervalTree[K,T] = new IntervalTree[K, T]()
+    val nodes: List[Node[K, T]] = inOrder(root)
+    nodes.foreach(n => n.clearChildren())
+    newTree.insertRecursive(nodes)
+    return newTree
+  }
+
   def size(): Long = {
     nodeCount
   }
