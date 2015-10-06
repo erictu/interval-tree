@@ -150,20 +150,22 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
 
   private def search(r: Interval[Long], n: Node[K, T], id: Option[List[K]]): List[(K, T)] = {
     val results = new ListBuffer[(K, T)]()
-    if (n.overlaps(r)) {
-      id match {
-        case Some(id) => results ++= n.multiget(id)
-        case None     => results ++= n.getAll()
+    if (n != null) {
+      if (n.overlaps(r)) {
+        id match {
+          case Some(id) => results ++= n.multiget(id)
+          case None     => results ++= n.getAll()
+        }
       }
-    }
-    if (n.subtreeMax < r.start) {
-      return results.toList
-    }
-    if (n.leftChild != null) {
-      results ++= search(r, n.leftChild, id)
-    }
-    if (n.rightChild != null) {
-      results ++= search(r, n.rightChild, id)
+      if (n.subtreeMax < r.start) {
+        return results.toList
+      }
+      if (n.leftChild != null) {
+        results ++= search(r, n.leftChild, id)
+      }
+      if (n.rightChild != null) {
+        results ++= search(r, n.rightChild, id)
+      }
     }
     return results.toList.distinct
   }
@@ -255,6 +257,9 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
 
   private def inOrder(n: Node[K, T]): List[Node[K, T]]  = {
     val seen = new ListBuffer[Node[K, T]]()
+    if (n == null) {
+      return seen.toList
+    }
     if (n.leftChild != null) {
       seen ++= inOrder(n.leftChild)
     }

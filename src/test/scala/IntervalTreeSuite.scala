@@ -123,4 +123,21 @@ class IntervalTreeSuite extends FunSuite {
 		val newTree = tree.snapshot()
 		assert(tree.size() == newTree.size())
 	}
+
+	test("take snapshot of empty tree") {
+		val tree = new IntervalTree[Long, Long]()
+		val newTree = tree.snapshot()
+	}
+
+	test("search empty tree") {
+		val tree = new IntervalTree[Long, Long]()
+
+		// create interval to search
+		val start = 0L
+		val end = 1000L
+		val interval = new Interval(start, end)
+
+		val ids: List[Long] = List(1L, 3L, 5L)
+		tree.search(interval, ids)	
+	}
 }
