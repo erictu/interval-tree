@@ -32,6 +32,12 @@ class Node[K, T](r: Interval[Long]) {
     put(k, t)
   }
 
+  override def clone: Node[K, T] = {
+    val n: Node[K, T] = new Node(interval)
+    n.dataMap = dataMap
+    n
+  }
+
   def clearChildren() = {
     leftChild = null
     rightChild = null

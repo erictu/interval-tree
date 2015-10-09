@@ -107,7 +107,8 @@ class IntervalTreeSuite extends FunSuite {
 			tree.insert(interval, (id, partition))
 		}
 
-		assert(tree.rightDepth - tree.leftDepth <= 5)
+		assert(tree.rightDepth - tree.leftDepth <= 16)
+		assert(tree.size == 50)
 
 	}
 
@@ -124,6 +125,31 @@ class IntervalTreeSuite extends FunSuite {
 		assert(tree.size() == newTree.size())
 	}
 
+	test("merge 2 trees with nonoverlapping intervals") {
+		var totalRecs = 0
+		val tree1 = new IntervalTree[Long, Long]()
+
+		for (id <- 1L to 10L) {
+			val partition: Long = id
+			val interval = new Interval(id , id + 1000L)
+			tree1.insert(interval, (id, partition))
+			totalRecs += 1
+		}
+
+		val tree2 = new IntervalTree[Long, Long]()
+
+		for (id <- 11L to 20L) {
+			val partition: Long = id
+			val interval = new Interval(id , id + 1000L)
+			tree2.insert(interval, (id, partition))
+			totalRecs += 1
+		}
+
+		val newTree = tree1.merge(tree2)
+		assert(newTree.size == totalRecs)
+	}		
+
+	// test edge cases
 	test("take snapshot of empty tree") {
 		val tree = new IntervalTree[Long, Long]()
 		val newTree = tree.snapshot()
@@ -140,4 +166,6 @@ class IntervalTreeSuite extends FunSuite {
 		val ids: List[Long] = List(1L, 3L, 5L)
 		tree.search(interval, ids)	
 	}
+
+
 }
