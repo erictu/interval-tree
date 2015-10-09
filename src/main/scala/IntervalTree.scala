@@ -24,15 +24,14 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
   var root: Node[K, T] = null
   var leftDepth: Long = 0
   var rightDepth: Long = 0
-  val threshold = 4
+  val threshold = 15
   var nodeCount: Long = 0
 
   def snapshot(): IntervalTree[K, T] = {
     val newTree: IntervalTree[K,T] = new IntervalTree[K, T]()
-    val nodes: List[Node[K, T]] = inOrder(root)
-    nodes.foreach(n => n.clearChildren())
+    val nodes: List[Node[K, T]] = inOrder()
     newTree.insertRecursive(nodes)
-    return newTree
+    newTree
   }
 
   def size(): Long = {
@@ -43,9 +42,15 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     root = null
   }
 
+  def merge(nT: IntervalTree[K,T]): IntervalTree[K,T] = {
+    val newNodes: List[Node[K, T]] = nT.inOrder()
+    val newTree = this.snapshot()
+    newTree.insertRecursive(newNodes)
+    newTree
+  }
+
   def printNodes(): Unit = {
-    val nodes: List[Node[K, T]] = inOrder(root)
-    println("Printing all nodes in tree:")
+    val nodes: List[Node[K, T]] = inOrder().sortWith(_.interval.start < _.interval.start)
     nodes.foreach(r => println(r.interval))
   }
 
@@ -150,20 +155,22 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
 
   private def search(r: Interval[Long], n: Node[K, T], id: Option[List[K]]): List[(K, T)] = {
     val results = new ListBuffer[(K, T)]()
-    if (n.overlaps(r)) {
-      id match {
-        case Some(id) => results ++= n.multiget(id)
-        case None     => results ++= n.getAll()
+    if (n != null) {
+      if (n.overlaps(r)) {
+        id match {
+          case Some(id) => results ++= n.multiget(id)
+          case None     => results ++= n.getAll()
+        }
       }
-    }
-    if (n.subtreeMax < r.start) {
-      return results.toList
-    }
-    if (n.leftChild != null) {
-      results ++= search(r, n.leftChild, id)
-    }
-    if (n.rightChild != null) {
-      results ++= search(r, n.rightChild, id)
+      if (n.subtreeMax < r.start) {
+        return results.toList
+      }
+      if (n.leftChild != null) {
+        results ++= search(r, n.leftChild, id)
+      }
+      if (n.rightChild != null) {
+        results ++= search(r, n.rightChild, id)
+      }
     }
     return results.toList.distinct
   }
@@ -219,7 +226,11 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
           nodeCount += 1         
           search = false
         }
-      } 
+      } else {
+        // attempting to replace a nodealready in tree. Merge
+        curr.multiput(n.getAll())
+        search = false
+      }
     }
     if (tempLeftDepth > leftDepth) {
       leftDepth = tempLeftDepth
@@ -237,6 +248,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
       val count = nodes.length
       val middle = count/2
       val node = nodes(middle)
+
       insertNode(node)
       insertRecursive(nodes.take(middle))
       insertRecursive(nodes.drop(middle + 1))
@@ -245,7 +257,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
 
   // currently gets an inorder list of the tree, then bulk constructs a new tree
   private def rebalance() = {
-    val nodes: List[Node[K,T]] = inOrder(root)
+    val nodes: List[Node[K,T]] = inOrder()
     root = null
     nodeCount = 0
     val orderedList = nodes.sortWith(_.interval.start < _.interval.start)
@@ -253,16 +265,20 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     insertRecursive(orderedList)
   }
 
-  private def inOrder(n: Node[K, T]): List[Node[K, T]]  = {
+  private def inOrder(): List[Node[K, T]] = {
+    return inOrder(root).toList
+  }
+
+  private def inOrder(n: Node[K, T]): ListBuffer[Node[K, T]] = {
     val seen = new ListBuffer[Node[K, T]]()
-    if (n.leftChild != null) {
-      seen ++= inOrder(n.leftChild)
+    if (n == null) {
+      return seen
     }
-    seen += n
-    if (n.rightChild != null) {
-      seen ++= inOrder(n.rightChild)
-    }
-    return seen.toList
+    seen += n.clone
+
+    seen ++= inOrder(n.leftChild)
+    seen ++= inOrder(n.rightChild)
+    seen
   }
 
 }
