@@ -20,6 +20,7 @@ package com.github.akmorrow13.intervaltree
 import org.scalatest.FunSuite
 import org.scalatest.Matchers
 import scala.collection.mutable.ListBuffer
+import org.bdgenomics.adam.models.ReferenceRegion
 
 class IntervalTreeSuite extends FunSuite {
 
@@ -32,9 +33,9 @@ class IntervalTreeSuite extends FunSuite {
 		for (start <- 1L to 6L) {
 			val end = start + 500L
 
-			val interval = new Interval(start, end)
+			val region = new ReferenceRegion("region", start, end)
 			val partition: Long = start % partitions
-			tree.insert(interval, (id, partition))
+			tree.insert(region, (id, partition))
 		}
 		assert(tree.size() == 6)
 	}
@@ -46,18 +47,18 @@ class IntervalTreeSuite extends FunSuite {
 
 		val start = 0L
 		val end = 1000L
-		val interval = new Interval(start, end)
+		val region = new ReferenceRegion("region", start, end)
 
 		for (id <- 1L to 6L) {
 			val partition: Long = start % partitions
-			tree.insert(interval, (id, partition))
+			tree.insert(region, (id, partition))
 		}
 
-		var searchOne: List[(Long, Long)] = tree.search(interval, 1L)
+		var searchOne: List[(Long, Long)] = tree.search(region, 1L)
 		assert(searchOne.size == 1)
 
 		// search for all
-		var searchAll: List[(Long, Long)] = tree.search(interval)
+		var searchAll: List[(Long, Long)] = tree.search(region)
 		assert(searchAll.size == 6)
 
 		assert(tree.size() == 1)		
@@ -68,16 +69,16 @@ class IntervalTreeSuite extends FunSuite {
 
 		val start = 0L
 		val end = 1000L
-		val interval = new Interval(start, end)
+		val region = new ReferenceRegion("region", start, end)
 
 		for (id <- 1L to 6L) {
 			val partition: Long = id
-			tree.insert(interval, (id, partition))
+			tree.insert(region, (id, partition))
 		}
 
 		// create multiple ids to be searched
 		val ids: List[Long] = List(1L, 3L, 5L)
-		val searchSome: List[(Long, Long)] = tree.search(interval, ids)	
+		val searchSome: List[(Long, Long)] = tree.search(region, ids)	
 		assert(searchSome.contains((1L, 1L)) == true)
 		assert(searchSome.contains((3L, 3L)) == true)
 		assert(searchSome.contains((3L, 3L)) == true)
@@ -89,12 +90,12 @@ class IntervalTreeSuite extends FunSuite {
 
 		val r: List[(Long, Long)] = List((1L, 2L), (3L, 4L), (5L, 6L))
 
-		val i: Interval[Long] = new Interval(0, 1000)
+		val region = new ReferenceRegion("region", 0, 1000)
 
-		tree.insert(i, r)
+		tree.insert(region, r)
 
 		assert(tree.size == 1)
-		assert(tree.search(i).size == 3)
+		assert(tree.search(region).size == 3)
 
 	}
 
@@ -103,8 +104,8 @@ class IntervalTreeSuite extends FunSuite {
 
 		for (id <- 1L to 50L) {
 			val partition: Long = id
-			val interval = new Interval(id + 7L, id + 1000L)
-			tree.insert(interval, (id, partition))
+			val region = new ReferenceRegion("region", id + 7L, id + 1000L)
+			tree.insert(region, (id, partition))
 		}
 
 		assert(tree.rightDepth - tree.leftDepth <= 16)
@@ -117,8 +118,8 @@ class IntervalTreeSuite extends FunSuite {
 
 		for (id <- 1L to 50L) {
 			val partition: Long = id
-			val interval = new Interval(id + 7L, id + 1000L)
-			tree.insert(interval, (id, partition))
+			val region = new ReferenceRegion("region", id + 7L, id + 1000L)
+			tree.insert(region, (id, partition))
 		}
 
 		val newTree = tree.snapshot()
@@ -131,8 +132,8 @@ class IntervalTreeSuite extends FunSuite {
 
 		for (id <- 1L to 10L) {
 			val partition: Long = id
-			val interval = new Interval(id , id + 1000L)
-			tree1.insert(interval, (id, partition))
+			val region = new ReferenceRegion("region", id , id + 1000L)
+			tree1.insert(region, (id, partition))
 			totalRecs += 1
 		}
 
@@ -140,8 +141,8 @@ class IntervalTreeSuite extends FunSuite {
 
 		for (id <- 11L to 20L) {
 			val partition: Long = id
-			val interval = new Interval(id , id + 1000L)
-			tree2.insert(interval, (id, partition))
+			val region = new ReferenceRegion("region", id , id + 1000L)			
+			tree2.insert(region, (id, partition))
 			totalRecs += 1
 		}
 
@@ -161,10 +162,10 @@ class IntervalTreeSuite extends FunSuite {
 		// create interval to search
 		val start = 0L
 		val end = 1000L
-		val interval = new Interval(start, end)
+		val region = new ReferenceRegion("region", start, end)
 
 		val ids: List[Long] = List(1L, 3L, 5L)
-		tree.search(interval, ids)	
+		tree.search(region, ids)	
 	}
 
 

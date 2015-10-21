@@ -14,6 +14,10 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.12.2" % "test"
 
+libraryDependencies += "org.bdgenomics.adam" %% "adam-cli" % "0.18.0"
+libraryDependencies += "org.bdgenomics.adam" %% "adam-core" % "0.18.0"
+libraryDependencies += "org.bdgenomics.adam" %% "adam-core" % "0.18.0" % "test" classifier "tests"
+
 // Run tests with more memory
 javaOptions in test += "-Xmx2G"
 
