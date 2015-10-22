@@ -19,21 +19,22 @@ package com.github.akmorrow13.intervaltree
 
 import collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
+import org.bdgenomics.adam.models.ReferenceRegion
 
-class Node[K, T](r: Interval[Long]) {
-  val interval = r
+class Node[K, T](r: ReferenceRegion) {
+  val region = r
   var leftChild: Node[K, T] = null
   var rightChild: Node[K, T] = null
-  var subtreeMax = interval.end
+  var subtreeMax = region.end
   var dataMap: HashMap[K, T] = new HashMap() 
 
-  def this(i: Interval[Long], k: K, t: T) = {
+  def this(i: ReferenceRegion, k: K, t: T) = {
     this(i)
     put(k, t)
   }
 
   override def clone: Node[K, T] = {
-    val n: Node[K, T] = new Node(interval)
+    val n: Node[K, T] = new Node(region)
     n.dataMap = dataMap
     n
   }
@@ -43,13 +44,23 @@ class Node[K, T](r: Interval[Long]) {
     rightChild = null
   }
 
-  def greaterThan(r: Interval[Long]): Boolean = interval.greaterThan(r)
+  // TODO: these methods should eventually be moved to ReferenceRegion class
+  def greaterThan(other: ReferenceRegion): Boolean = {
+    region.referenceName == other.referenceName &&
+      region.start > other.start
+  }
 
-  def lessThan(r: Interval[Long]): Boolean = interval.lessThan(r)
+  def equals(other: ReferenceRegion): Boolean = {
+    region.referenceName == other.referenceName &&
+      (region.start == other.start && region.end == other.end)
+  }
 
-  def overlaps(r: Interval[Long]): Boolean = interval.overlaps(r)
+  def lessThan(other: ReferenceRegion): Boolean = {
+    region.referenceName == other.referenceName &&
+      region.start < other.start
+  }
 
-  def equals(r: Interval[Long]): Boolean = interval.equals(r)
+  def overlaps(other: ReferenceRegion): Boolean = region.overlaps(r)
 
   def multiput(rs: List[(K, T)]) = {
     rs.foreach(r => put(r._1, r._2) )
