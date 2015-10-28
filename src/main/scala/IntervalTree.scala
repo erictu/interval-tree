@@ -55,89 +55,6 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     nodes.foreach(r => println(r.region))
   }
 
-  def insert(i: ReferenceRegion, r: (K, T)): Boolean  = {
-    insert(i, List(r))
-  }
-
-  def insert(i: ReferenceRegion, r: List[(K, T)]): Boolean = {
-    insertHelper(i, r)
-    if (Math.abs(leftDepth - rightDepth) > threshold) {
-      rebalance()
-    } 
-    true
-  }
-
-  private def insertHelper(region: ReferenceRegion, r: List[(K, T)]): Boolean  = {
-    if (root == null) {
-      nodeCount += 1
-      root = new Node[K, T](region)
-      root.multiput(r)
-      return true
-    }
-    var curr: Node[K, T] = root
-    var parent: Node[K, T] = null
-    var search: Boolean = true
-    var leftSide: Boolean = false
-    var rightSide: Boolean = false
-    var tempLeftDepth: Long = 0
-    var tempRightDepth: Long = 0
-
-    while (search) {
-      if (curr.greaterThan(region)) {
-        // traverse left subtree
-        if (!leftSide && !rightSide) {
-          leftSide = true
-        }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
-        parent = curr
-        curr = curr.leftChild
-        if (curr == null) {
-          curr = new Node(region)
-          curr.multiput(r)
-          parent.leftChild = curr
-          nodeCount += 1
-          search = false
-        }
-
-      } else if (curr.lessThan(region)) {
-        // traverse right subtree
-        if (!leftSide && !rightSide) {
-          rightSide = true
-        }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
-        parent = curr
-        curr = curr.rightChild
-        if (curr == null) {
-          curr = new Node(region)
-          curr.multiput(r)
-          parent.rightChild= curr
-          nodeCount += 1         
-          search = false
-        }
-      } else {
-        // insert new id, given id is not in tree
-        curr.multiput(r)
-        search = false
-      }
-    }
-    if (tempLeftDepth > leftDepth) {
-      leftDepth = tempLeftDepth
-    } else if (tempRightDepth > rightDepth) {
-      rightDepth = tempRightDepth
-    }
-    true
-  }
-
   /* serches for single interval over single id */
   def search(r: ReferenceRegion, id: K): List[(K, T)] = {
     search(r, root, Option(List(id)))
@@ -175,6 +92,25 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     return results.toList.distinct
   }
 
+
+  def insert(i: ReferenceRegion, r: (K, T)): Boolean  = {
+    insert(i, List(r))
+  }
+
+  def insert(i: ReferenceRegion, r: List[(K, T)]): Boolean = {
+    insertRegion(i, r)
+    if (Math.abs(leftDepth - rightDepth) > threshold) {
+      rebalance()
+    } 
+    true
+  }
+
+  private def insertRegion(region: ReferenceRegion, r: List[(K, T)]): Boolean  = {
+    var newNode = new Node[K, T](region)
+    newNode.multiput(r) //puts all this info into the node
+    return insertNode(newNode)
+  }
+  
   private def insertNode(n: Node[K, T]): Boolean = {
    if (root == null) {
       root = n
