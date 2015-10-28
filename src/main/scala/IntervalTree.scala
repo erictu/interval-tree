@@ -67,6 +67,10 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     true
   }
 
+  /* 
+  * This method finds an existing node (keyed by ReferenceRegion) to insert the data into,
+  * or creates a new node to insert it into the tree
+  */ 
   private def insertRegion(region: ReferenceRegion, r: List[(K, T)]): Boolean  = {
     if (root == null) {
       nodeCount += 1
@@ -175,7 +179,11 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     return results.toList.distinct
   }
 
-  private def insertNode(n: Node[K, T]): Boolean = {
+  /*
+  * This method is used for bulk insertions of Nodes into a tree,
+  * specifically with regards to rebalancing
+  */
+  def insertNode(n: Node[K, T]): Boolean = {
    if (root == null) {
       root = n
       nodeCount += 1
