@@ -51,6 +51,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
   }
 
   def printNodes(): Unit = {
+    println("Printing all nodes in interval tree")
     val nodes: List[Node[K, T]] = inOrder().sortWith(_.region.start < _.region.start)
     nodes.foreach(r => println(r.region))
   }
@@ -76,6 +77,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     }
     var curr: Node[K, T] = root
     var parent: Node[K, T] = null
+    var inserted: Boolean = false
     var search: Boolean = true
     var leftSide: Boolean = false
     var rightSide: Boolean = false
@@ -102,6 +104,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
           parent.leftChild = curr
           nodeCount += 1
           search = false
+          inserted = true
         }
 
       } else if (curr.lessThan(region)) {
@@ -123,6 +126,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
           parent.rightChild= curr
           nodeCount += 1         
           search = false
+          inserted = true
         }
       } else {
         // insert new id, given id is not in tree
@@ -135,7 +139,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     } else if (tempRightDepth > rightDepth) {
       rightDepth = tempRightDepth
     }
-    true
+    inserted
   }
 
   /* serches for single interval over single id */
