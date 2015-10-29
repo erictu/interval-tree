@@ -61,14 +61,18 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
   }
 
   def insert(i: ReferenceRegion, r: List[(K, T)]): Boolean = {
-    insertHelper(i, r)
+    insertRegion(i, r)
     if (Math.abs(leftDepth - rightDepth) > threshold) {
       rebalance()
     } 
     true
   }
 
-  private def insertHelper(region: ReferenceRegion, r: List[(K, T)]): Boolean  = {
+  /* 
+  * This method finds an existing node (keyed by ReferenceRegion) to insert the data into,
+  * or creates a new node to insert it into the tree
+  */ 
+  private def insertRegion(region: ReferenceRegion, r: List[(K, T)]): Boolean  = {
     if (root == null) {
       nodeCount += 1
       root = new Node[K, T](region)
@@ -85,18 +89,13 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     var tempRightDepth: Long = 0
 
     while (search) {
-      if (curr.greaterThan(region)) {
-        // traverse left subtree
+      curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
+      parent = curr
+      if (curr.greaterThan(region)) { //left traversal
         if (!leftSide && !rightSide) {
           leftSide = true
         }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
-        parent = curr
+        tempLeftDepth += 1
         curr = curr.leftChild
         if (curr == null) {
           curr = new Node(region)
@@ -106,19 +105,11 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
           search = false
           inserted = true
         }
-
-      } else if (curr.lessThan(region)) {
-        // traverse right subtree
-        if (!leftSide && !rightSide) {
+      } else if (curr.lessThan(region)) { //right traversal
+        if (!leftSide && !rightSide) { 
           rightSide = true
         }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
-        parent = curr
+        tempRightDepth += 1
         curr = curr.rightChild
         if (curr == null) {
           curr = new Node(region)
@@ -128,12 +119,12 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
           search = false
           inserted = true
         }
-      } else {
-        // insert new id, given id is not in tree
+      } else { // insert new id, given id is not in tree
         curr.multiput(r)
         search = false
       }
     }
+    // done searching, now let's set our max depths
     if (tempLeftDepth > leftDepth) {
       leftDepth = tempLeftDepth
     } else if (tempRightDepth > rightDepth) {
@@ -179,7 +170,14 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     return results.toList.distinct
   }
 
-  private def insertNode(n: Node[K, T]): Boolean = {
+  /*
+  * This method is used for bulk insertions of Nodes into a tree,
+  * specifically with regards to rebalancing
+  * Note: this method only appends data to existing nodes if a node with the
+  *   same exact ReferenceRegion exists. In insertRegion, it will insert the data 
+  *   if the ReferenceRegion is a subregion of a particular Node.
+  */
+  def insertNode(n: Node[K, T]): Boolean = {
    if (root == null) {
       root = n
       nodeCount += 1
@@ -193,49 +191,36 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     var tempLeftDepth: Long = 0
     var tempRightDepth: Long = 0
     while (search) {
-      if (curr.greaterThan(n.region)) {
-        // traverse left subtree
+      curr.subtreeMax = Math.max(curr.subtreeMax, n.region.end)
+      parent = curr
+      if (curr.greaterThan(n.region)) { //left traversal
         if (!leftSide && !rightSide) {
           leftSide = true
         }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, n.region.end)
-        parent = curr
+        tempLeftDepth += 1
         curr = curr.leftChild
         if (curr == null) {
           parent.leftChild = n
           nodeCount += 1
           search = false
         }
-
-      } else if (curr.lessThan(n.region)) {
-        // traverse right subtree
+      } else if (curr.lessThan(n.region)) { //right traversal
         if (!leftSide && !rightSide) {
           rightSide = true
         }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, n.region.end)
-        parent = curr
+        tempRightDepth += 1
         curr = curr.rightChild
         if (curr == null) {
           parent.rightChild= n
           nodeCount += 1         
           search = false
         }
-      } else {
-        // attempting to replace a nodealready in tree. Merge
+      } else { // attempting to replace a node already in tree. Merge
         curr.multiput(n.getAll())
         search = false
       }
     }
+    // done searching, now let's set our max depths
     if (tempLeftDepth > leftDepth) {
       leftDepth = tempLeftDepth
     } else if (tempRightDepth > rightDepth) {
