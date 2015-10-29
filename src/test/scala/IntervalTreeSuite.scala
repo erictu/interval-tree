@@ -168,5 +168,62 @@ class IntervalTreeSuite extends FunSuite {
 		tree.search(region, ids)	
 	}
 
+	test("difference between insertRegion and insertNode: RefRegion is the same") {
+		val tree1 = new IntervalTree[Long, Long]()
+		val tree2 = new IntervalTree[Long, Long]()
+		val partitions = 10
 
+		val start = 0L
+		val end = 1000L
+		val region = new ReferenceRegion("region", start, end)
+		//all the data should go into just one node for regular insert
+		//but we should be left with 6 nodes for insertNode
+		for (id <- 1L to 6L) {
+			val partition: Long = start % partitions
+			tree1.insert(region, (id, partition))
+			val newNode = new Node[Long, Long](region)
+			newNode.put(id, partition)
+			tree2.insertNode(newNode)
+		}
+
+		println("regular insert method tree size: " + tree1.size())
+		println("insertNode method tree size: " + tree2.size())
+		tree1.printNodes()
+		tree2.printNodes()
+		assert(tree1.size() == 1)
+		assert(tree2.size() == 1) //should be the same because the data is merged with the same region
+	}
+
+	test("difference between insertRegion and insertNode: RefRegion is the different") {
+		val tree1 = new IntervalTree[Long, Long]()
+		val tree2 = new IntervalTree[Long, Long]()
+
+		//regions is smaller and smaller subsets
+		val reg1 = new ReferenceRegion("region", 0L, 1000L)
+		val reg2 = new ReferenceRegion("region", 100L, 900L)
+		val reg3 = new ReferenceRegion("region", 300L, 700L)
+
+		//(region, (id, partitionNum))
+		tree1.insert(reg1, (1L, 1L))
+		val node1 = new Node[Long, Long](reg1)
+		node1.put(1L, 1L)
+		tree2.insertNode(node1)
+
+		tree1.insert(reg1, (2L, 2L))
+		val node2 = new Node[Long, Long](reg2)
+		node2.put(2L, 2L)
+		tree2.insertNode(node2)
+
+		tree1.insert(reg1, (3L, 3L))
+		val node3 = new Node[Long, Long](reg3)
+		node3.put(3L, 3L)
+		tree2.insertNode(node3)
+
+		println("regular insert method tree size: " + tree1.size())
+		println("insertNode method tree size: " + tree2.size())
+		tree1.printNodes()
+		tree2.printNodes()
+		assert(tree1.size() == 1)
+		assert(tree2.size() == 3)	
+	}
 }
