@@ -87,18 +87,13 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     var tempRightDepth: Long = 0
 
     while (search) {
-      if (curr.greaterThan(region)) {
-        // traverse left subtree
+      curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
+      parent = curr
+      if (curr.greaterThan(region)) { //left traversal
         if (!leftSide && !rightSide) {
           leftSide = true
         }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
-        parent = curr
+        tempLeftDepth += 1
         curr = curr.leftChild
         if (curr == null) {
           curr = new Node(region)
@@ -107,19 +102,11 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
           nodeCount += 1
           search = false
         }
-
       } else if (curr.lessThan(region)) {
-        // traverse right subtree
-        if (!leftSide && !rightSide) {
+        if (!leftSide && !rightSide) { //right traversal
           rightSide = true
         }
-        if (rightSide) {
-          tempRightDepth += 1
-        } else if (leftSide) {
-          tempLeftDepth += 1
-        }
-        curr.subtreeMax = Math.max(curr.subtreeMax, region.end)
-        parent = curr
+        tempRightDepth += 1
         curr = curr.rightChild
         if (curr == null) {
           curr = new Node(region)
@@ -134,6 +121,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
         search = false
       }
     }
+    // done searching, now let's set our max depths
     if (tempLeftDepth > leftDepth) {
       leftDepth = tempLeftDepth
     } else if (tempRightDepth > rightDepth) {
@@ -141,6 +129,9 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     }
     true
   }
+
+
+
 
   /* serches for single interval over single id */
   def search(r: ReferenceRegion, id: K): List[(K, T)] = {

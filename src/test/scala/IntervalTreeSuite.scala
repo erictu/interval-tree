@@ -191,7 +191,7 @@ class IntervalTreeSuite extends FunSuite {
 		tree1.printNodes()
 		tree2.printNodes()
 		assert(tree1.size() == 1)
-		assert(tree2.size() == 6)	
+		assert(tree2.size() == 1) //should be the same because the data is merged with the same region
 	}
 
 	test("difference between insertRegion and insertNode: RefRegion is the different") {
