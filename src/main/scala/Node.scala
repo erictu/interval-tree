@@ -60,7 +60,9 @@ class Node[K, T](r: ReferenceRegion) {
       region.start < other.start
   }
 
-  def overlaps(other: ReferenceRegion): Boolean = region.overlaps(r)
+  def overlaps(other: ReferenceRegion): Boolean = {
+    region.overlaps(other)
+  }
 
   def multiput(rs: List[(K, T)]) = {
     rs.foreach(r => put(r._1, r._2) )
