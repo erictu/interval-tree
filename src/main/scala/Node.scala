@@ -21,7 +21,7 @@ import collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import org.bdgenomics.adam.models.ReferenceRegion
 
-class Node[K, T](r: ReferenceRegion) {
+class Node[K, T](r: ReferenceRegion) extends Serializable {
   val region = r
   var leftChild: Node[K, T] = null
   var rightChild: Node[K, T] = null
