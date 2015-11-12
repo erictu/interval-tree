@@ -72,13 +72,23 @@ class Node[K, T](r: ReferenceRegion) extends Serializable {
     dataMap += (id -> data)
   }
 
-  def get(id: K): (K,T) = (id, dataMap(id))
+  def get(id: K): Option[(K,T)] = {
+    if (dataMap.contains(id))
+      Some((id, dataMap(id)))
+    else
+      None
+  }
 
   def getAll(): List[(K, T)] = dataMap.toList
 
   def multiget(ids: List[K]): List[(K,T)] = {
     var data = new ListBuffer[(K,T)]()
-    ids.foreach(data += get(_))
+
+    ids.foreach(k => {
+      val d = get(k)
+      if (d.nonEmpty)
+        data += d.get
+    })
     data.toList
   }
 }
