@@ -54,14 +54,14 @@ class IntervalTreeSuite extends FunSuite {
 			tree.insert(region, (id, partition))
 		}
 
-		var searchOne: List[(Long, Long)] = tree.search(region, 1L)
+		var searchOne: List[(Long, Long)] = tree.search(region, 1L).toList
 		assert(searchOne.size == 1)
 
 		// search for all
-		var searchAll: List[(Long, Long)] = tree.search(region)
+		var searchAll: List[(Long, Long)] = tree.search(region).toList
 		assert(searchAll.size == 6)
 
-		assert(tree.size() == 1)		
+		assert(tree.size() == 1)
 	}
 
 	test("search for only some ids") {
@@ -77,8 +77,8 @@ class IntervalTreeSuite extends FunSuite {
 		}
 
 		// create multiple ids to be searched
-		val ids: List[Long] = List(1L, 3L, 5L)
-		val searchSome: List[(Long, Long)] = tree.search(region, ids)	
+		val ids: Iterator[Long] = Iterator(1L, 3L, 5L)
+		val searchSome: List[(Long, Long)] = tree.search(region, ids).toList
 		assert(searchSome.contains((1L, 1L)) == true)
 		assert(searchSome.contains((3L, 3L)) == true)
 		assert(searchSome.contains((3L, 3L)) == true)
@@ -88,7 +88,7 @@ class IntervalTreeSuite extends FunSuite {
 	test("insert ids in bulk with same interval") {
 		val tree = new IntervalTree[Long, Long]()
 
-		val r: List[(Long, Long)] = List((1L, 2L), (3L, 4L), (5L, 6L))
+		val r: Iterator[(Long, Long)] = Iterator((1L, 2L), (3L, 4L), (5L, 6L))
 
 		val region = new ReferenceRegion("region", 0, 1000)
 
@@ -141,14 +141,14 @@ class IntervalTreeSuite extends FunSuite {
 
 		for (id <- 11L to 20L) {
 			val partition: Long = id
-			val region = new ReferenceRegion("region", id , id + 1000L)			
+			val region = new ReferenceRegion("region", id , id + 1000L)
 			tree2.insert(region, (id, partition))
 			totalRecs += 1
 		}
 
 		val newTree = tree1.merge(tree2)
 		assert(newTree.size == totalRecs)
-	}		
+	}
 
 	// test edge cases
 	test("take snapshot of empty tree") {
@@ -164,8 +164,8 @@ class IntervalTreeSuite extends FunSuite {
 		val end = 1000L
 		val region = new ReferenceRegion("region", start, end)
 
-		val ids: List[Long] = List(1L, 3L, 5L)
-		tree.search(region, ids)	
+		val ids: Iterator[Long] = Iterator(1L, 3L, 5L)
+		tree.search(region, ids)
 	}
 
 	test("difference between insertRegion and insertNode: RefRegion is the same") {
@@ -224,6 +224,6 @@ class IntervalTreeSuite extends FunSuite {
 		tree1.printNodes()
 		tree2.printNodes()
 		assert(tree1.size() == 1)
-		assert(tree2.size() == 3)	
+		assert(tree2.size() == 3)
 	}
 }
