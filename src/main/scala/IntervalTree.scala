@@ -149,24 +149,37 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
   } 
 
   private def search(r: ReferenceRegion, n: Node[K, T], id: Option[List[K]]): List[(K, T)] = {
+    println("ITSEARCH: REGION FOR SEARCH")
+    println(r)
+    println("ITSEARCH: NODE REGION")
+    println(n.region)
     val results = new ListBuffer[(K, T)]()
     if (n != null) {
       if (n.overlaps(r)) {
+        println("ITSEARCH: OVERLAPS")
+        println(id)
         id match {
           case Some(id) => results ++= n.multiget(id)
           case None     => results ++= n.getAll()
         }
       }
       if (n.subtreeMax < r.start) {
+        println("ITSEARCH: N SUBTREE MAX < R START")
+        println(n.subtreeMax)
         return results.toList
       }
       if (n.leftChild != null) {
+        println("ITSEARCH: GOING LEFT")
         results ++= search(r, n.leftChild, id)
       }
       if (n.rightChild != null) {
+        println("ITSEARCH: GOING RIGHT")
         results ++= search(r, n.rightChild, id)
       }
     }
+    val found: List[K] = results.toList.distinct.map(k => k._1)
+    println("ITSEARCH: FOUND IN SEARCH")
+    println(found.size)
     return results.toList.distinct
   }
 

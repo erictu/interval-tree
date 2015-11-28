@@ -73,6 +73,7 @@ class Node[K, T](r: ReferenceRegion) extends Serializable {
   }
 
   def get(id: K): Option[(K,T)] = {
+    // println(dataMap)
     if (dataMap.contains(id))
       Some((id, dataMap(id)))
     else
@@ -86,6 +87,10 @@ class Node[K, T](r: ReferenceRegion) extends Serializable {
 
     ids.foreach(k => {
       val d = get(k)
+      // println("IDS NODE MULTGET")
+      // println(k)
+      // println(d)
+      // println(d.nonEmpty)
       if (d.nonEmpty)
         data += d.get
     })
