@@ -81,9 +81,8 @@ class Node[K, V](r: ReferenceRegion) extends Serializable {
 
   def getAll(): Iterator[(K, V)] = dataMap.toIterator
 
-  def multiget(ids: Iterator[K]): Iterator[(K,V)] = {
+  def multiget(ids: List[K]): Iterator[(K,V)] = {
     var data = new ListBuffer[(K,V)]()
-
     ids.foreach(k => {
       val d = get(k)
       if (d.nonEmpty)
