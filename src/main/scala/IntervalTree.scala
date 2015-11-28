@@ -53,7 +53,10 @@ class IntervalTree[K: ClassTag, V: ClassTag] extends Serializable {
   def printNodes(): Unit = {
     println("Printing all nodes in interval tree")
     val nodes: List[Node[K, V]] = inOrder().sortWith(_.region.start < _.region.start)
-    nodes.foreach(r => println(r.region))
+    nodes.foreach(r => {
+      println(r.region)
+      r.dataMap.foreach(e => println(e._1))
+    })
   }
 
   def insert(r: ReferenceRegion, kv: (K, V)): Boolean  = {
@@ -135,11 +138,11 @@ class IntervalTree[K: ClassTag, V: ClassTag] extends Serializable {
 
   /* serches for single interval over single id */
   def search(r: ReferenceRegion, id: K): Iterator[(K, V)] = {
-    search(r, root, Option(Iterator(id)))
+    search(r, root, Option(List(id)))
   }
 
   /* searches for single interval over multiple ids */
-  def search(r: ReferenceRegion, ids: Iterator[K]): Iterator[(K, V)] = {
+  def search(r: ReferenceRegion, ids: List[K]): Iterator[(K, V)] = {
     search(r, root, Option(ids))
   }
 
@@ -148,7 +151,7 @@ class IntervalTree[K: ClassTag, V: ClassTag] extends Serializable {
     search(r, root, None)
   }
 
-  private def search(r: ReferenceRegion, n: Node[K, V], id: Option[Iterator[K]]): Iterator[(K, V)] = {
+  private def search(r: ReferenceRegion, n: Node[K, V], id: Option[List[K]]): Iterator[(K, V)] = {
     val results = new ListBuffer[(K, V)]()
     if (n != null) {
       if (n.overlaps(r)) {
