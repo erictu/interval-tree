@@ -77,7 +77,7 @@ class IntervalTreeSuite extends FunSuite {
 		}
 
 		// create multiple ids to be searched
-		val ids: Iterator[Long] = Iterator(1L, 3L, 5L)
+		val ids: List[Long] = List(1L, 3L, 5L)
 		val searchSome: List[(Long, Long)] = tree.search(region, ids).toList
 		assert(searchSome.contains((1L, 1L)) == true)
 		assert(searchSome.contains((3L, 3L)) == true)
@@ -164,7 +164,7 @@ class IntervalTreeSuite extends FunSuite {
 		val end = 1000L
 		val region = new ReferenceRegion("region", start, end)
 
-		val ids: Iterator[Long] = Iterator(1L, 3L, 5L)
+		val ids: List[Long] = List(1L, 3L, 5L)
 		tree.search(region, ids)
 	}
 
