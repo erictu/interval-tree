@@ -24,6 +24,24 @@ import org.bdgenomics.adam.models.ReferenceRegion
 
 class IntervalTreeSuite extends FunSuite {
 
+	test("getAll for interval tree") {
+		val tree = new IntervalTree[Long, Long]()
+
+		val partitions = 10
+
+		val id = 1L
+		for (start <- 1L to 6L) {
+			val end = start + 500L
+
+			val region = new ReferenceRegion("region", start, end)
+			val partition: Long = start % partitions
+			tree.insert(region, (id, partition))
+		}
+		val results = tree.getAll()
+		assert(tree.size() == 6)
+		assert(results.size == 6)
+	}
+
 	test("insert regions to intervaltree for only one entity") {
 		val tree = new IntervalTree[Long, Long]()
 

@@ -136,6 +136,20 @@ class IntervalTree[K: ClassTag, V: ClassTag] extends Serializable {
     inserted
   }
 
+  def getAll(): Iterator[(K,V)] = {
+    getAll(root).distinct.toIterator
+  }
+
+  def getAll(n: Node[K,V]): List[(K,V)] = {
+    val results = new ListBuffer[(K,V)]()
+    if (n != null) {
+      results ++= getAll(n.leftChild)
+      results ++= n.getAll().toList
+      results ++= getAll(n.rightChild)
+    }
+    return results.toList
+  }
+
   /* serches for single interval over single id */
   def search(r: ReferenceRegion, id: K): Iterator[(K, V)] = {
     search(r, root, Option(List(id)))
