@@ -21,21 +21,25 @@ import collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 import org.bdgenomics.adam.models.ReferenceRegion
 
-class Node[K, V](r: ReferenceRegion) extends Serializable {
+class Node[V](r: ReferenceRegion) extends Serializable {
   val region = r
-  var leftChild: Node[K, V] = null
-  var rightChild: Node[K, V] = null
+  var leftChild: Node[V] = null
+  var rightChild: Node[V] = null
   var subtreeMax = region.end
-  var dataMap: HashMap[K, V] = new HashMap()
+  var data: ListBuffer[V] = new ListBuffer()
 
-  def this(i: ReferenceRegion, k: K, t: V) = {
+  def this(i: ReferenceRegion, t: V) = {
     this(i)
-    put(k, t)
+    put(t)
   }
 
-  override def clone: Node[K, V] = {
-    val n: Node[K, V] = new Node(region)
-    n.dataMap = dataMap
+  def getSize(): Long = {
+    data.length
+  }
+
+  override def clone: Node[V] = {
+    val n: Node[V] = new Node(region)
+    n.data = data
     n
   }
 
@@ -64,30 +68,15 @@ class Node[K, V](r: ReferenceRegion) extends Serializable {
     region.overlaps(other)
   }
 
-  def multiput(rs: Iterator[(K, V)]) = {
-    rs.foreach(r => put(r._1, r._2) )
+  def multiput(rs: Iterator[V]) = {
+    val newData = rs.toList
+    data ++= newData
   }
 
-  def put(id: K, data: V) = {
-    dataMap += (id -> data)
+  def put(newData: V) = {
+    data += newData
   }
 
-  def get(id: K): Option[(K,V)] = {
-    if (dataMap.contains(id))
-      Some((id, dataMap(id)))
-    else
-      None
-  }
+  def get(): Iterator[V] = data.toIterator
 
-  def getAll(): Iterator[(K, V)] = dataMap.toIterator
-
-  def multiget(ids: List[K]): Iterator[(K,V)] = {
-    var data = new ListBuffer[(K,V)]()
-    ids.foreach(k => {
-      val d = get(k)
-      if (d.nonEmpty)
-        data += d.get
-    })
-    data.toIterator
-  }
 }
