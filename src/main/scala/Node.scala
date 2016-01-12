@@ -26,6 +26,8 @@ class Node[V](r: ReferenceRegion) extends Serializable {
   var leftChild: Node[V] = null
   var rightChild: Node[V] = null
   var subtreeMax = region.end
+
+  // DATA SHOULD BE STORED MORE EFFICIENTLY
   var data: ListBuffer[V] = new ListBuffer()
 
   def this(i: ReferenceRegion, t: V) = {

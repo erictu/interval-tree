@@ -15,6 +15,13 @@
  * limitations under the License.
  */
 
+ // TODO
+   // remove nulls
+   // why does count require tree traversal
+   // look at other implementations
+   // node data storage more efficient
+   // comment/clean
+
 package com.github.akmorrow13.intervaltree
 import scala.reflect.{ ClassTag, classTag }
 import scala.collection.mutable.ListBuffer
@@ -44,7 +51,7 @@ class IntervalTree[V: ClassTag] extends Serializable {
   }
 
   def size(): Long = {
-    getNodeSizes
+    count
   }
 
   def IntervalTree() = {
@@ -83,16 +90,14 @@ class IntervalTree[V: ClassTag] extends Serializable {
   * This method finds an existing node (keyed by ReferenceRegion) to insert the data into,
   * or creates a new node to insert it into the tree
   */
-  private def insertRegion(region: ReferenceRegion, vs: Iterator[V]): Boolean  = {
+  private def insertRegion(region: ReferenceRegion, vs: Iterator[V])  = {
     if (root == null) {
       nodeCount += 1
       root = new Node[V](region)
       root.multiput(vs)
-      return true
     }
     var curr: Node[V] = root
     var parent: Node[V] = null
-    var inserted: Boolean = false
     var search: Boolean = true
     var leftSide: Boolean = false
     var rightSide: Boolean = false
@@ -114,7 +119,6 @@ class IntervalTree[V: ClassTag] extends Serializable {
           parent.leftChild = curr
           nodeCount += 1
           search = false
-          inserted = true
         }
       } else if (curr.lessThan(region)) { //right traversal
         if (!leftSide && !rightSide) {
@@ -128,20 +132,19 @@ class IntervalTree[V: ClassTag] extends Serializable {
           parent.rightChild= curr
           nodeCount += 1
           search = false
-          inserted = true
         }
       } else { // insert new id, given id is not in tree
         curr.multiput(vs)
+
         search = false
       }
     }
-    // done searching, now let's set our max depths
+    // done searching, set our max depths
     if (tempLeftDepth > leftDepth) {
       leftDepth = tempLeftDepth
     } else if (tempRightDepth > rightDepth) {
       rightDepth = tempRightDepth
     }
-    inserted
   }
 
   /* serches for single interval over single id */
@@ -257,20 +260,19 @@ class IntervalTree[V: ClassTag] extends Serializable {
     return inOrder(root).toList
   }
 
-  private def getNodeSizes(): Long = {
-    getNodeSizes(root)
+  private def count(): Long = {
+    count(root)
   }
 
-  private def getNodeSizes(n: Node[V]): Long = {
-    var count: Long = 0
+  private def count(n: Node[V]): Long = {
+    var total: Long = 0
     if (n == null) {
-      return count
+      return total
     }
-    count += n.getSize
-
-    count += getNodeSizes(n.leftChild)
-    count += getNodeSizes(n.rightChild)
-    count
+    total += n.getSize
+    total += count(n.leftChild)
+    total += count(n.rightChild)
+    total
   }
 
   private def inOrder(n: Node[V]): ListBuffer[Node[V]] = {
