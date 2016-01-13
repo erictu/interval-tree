@@ -24,88 +24,70 @@ import org.bdgenomics.adam.models.ReferenceRegion
 
 class IntervalTreeSuite extends FunSuite {
 
-	test("insert regions to intervaltree for only one entity") {
-		val tree = new IntervalTree[Long, Long]()
+	test("insert regions to intervaltree") {
+		val tree = new IntervalTree[Long]()
 
-		val partitions = 10
+		val id = 1L
+		for (start <- 1L to 6L) {
+			val end = start + 500L
+			val region = new ReferenceRegion("region", start, end)
+			tree.insert(region, start)
+		}
+		assert(tree.size == 6)
+	}
+
+
+	test("get all data from tree") {
+		val tree = new IntervalTree[Long]()
 
 		val id = 1L
 		for (start <- 1L to 6L) {
 			val end = start + 500L
 
 			val region = new ReferenceRegion("region", start, end)
-			val partition: Long = start % partitions
-			tree.insert(region, (id, partition))
+			tree.insert(region, start)
 		}
-		assert(tree.size() == 6)
+		assert(tree.get.size == 6)
 	}
 
-	test("insert different ids into same node, tests search all and search 1") {
-		val tree = new IntervalTree[Long, Long]()
-
-		val partitions = 10
+	test("insert different regions into same node, tests search") {
+		val tree = new IntervalTree[Long]()
 
 		val start = 0L
 		val end = 1000L
 		val region = new ReferenceRegion("region", start, end)
 
-		for (id <- 1L to 6L) {
-			val partition: Long = start % partitions
-			tree.insert(region, (id, partition))
+		for (i <- 1L to 6L) {
+			val value: Long = i
+			tree.insert(region, value)
 		}
-
-		var searchOne: List[(Long, Long)] = tree.search(region, 1L)
-		assert(searchOne.size == 1)
-
-		// search for all
-		var searchAll: List[(Long, Long)] = tree.search(region)
+		val x = tree.search(region)
+		var searchAll: List[Long] = tree.search(region).toList
 		assert(searchAll.size == 6)
 
-		assert(tree.size() == 1)		
 	}
 
-	test("search for only some ids") {
-		val tree = new IntervalTree[Long, Long]()
+	test("insert in bulk with same interval") {
+		val tree = new IntervalTree[Long]()
 
-		val start = 0L
-		val end = 1000L
-		val region = new ReferenceRegion("region", start, end)
-
-		for (id <- 1L to 6L) {
-			val partition: Long = id
-			tree.insert(region, (id, partition))
-		}
-
-		// create multiple ids to be searched
-		val ids: List[Long] = List(1L, 3L, 5L)
-		val searchSome: List[(Long, Long)] = tree.search(region, ids)	
-		assert(searchSome.contains((1L, 1L)) == true)
-		assert(searchSome.contains((3L, 3L)) == true)
-		assert(searchSome.contains((3L, 3L)) == true)
-
-	}
-
-	test("insert ids in bulk with same interval") {
-		val tree = new IntervalTree[Long, Long]()
-
-		val r: List[(Long, Long)] = List((1L, 2L), (3L, 4L), (5L, 6L))
+		val r: Iterator[Long] = Iterator(2L, 3L, 4L)
 
 		val region = new ReferenceRegion("region", 0, 1000)
 
 		tree.insert(region, r)
 
-		assert(tree.size == 1)
+		assert(tree.size == 3)
 		assert(tree.search(region).size == 3)
 
 	}
 
 	test("rebalancing tree") {
-		val tree = new IntervalTree[Long, Long]()
+		val tree = new IntervalTree[Long]()
 
-		for (id <- 1L to 50L) {
-			val partition: Long = id
-			val region = new ReferenceRegion("region", id + 7L, id + 1000L)
-			tree.insert(region, (id, partition))
+		for (i <- 1L to 50L) {
+			val partition: Long = i
+			val region = new ReferenceRegion("region", i + 7L, i + 1000L)
+			tree.insert(region, partition)
 		}
 
 		assert(tree.rightDepth - tree.leftDepth <= 16)
@@ -114,50 +96,44 @@ class IntervalTreeSuite extends FunSuite {
 	}
 
 	test("clone tree") {
-		val tree = new IntervalTree[Long, Long]()
+		val tree = new IntervalTree[Long]()
 
-		for (id <- 1L to 50L) {
-			val partition: Long = id
-			val region = new ReferenceRegion("region", id + 7L, id + 1000L)
-			tree.insert(region, (id, partition))
+		for (i <- 1L to 50L) {
+			val partition: Long = i
+			val region = new ReferenceRegion("region", i + 7L, i + 1000L)
+			tree.insert(region, partition)
 		}
 
 		val newTree = tree.snapshot()
-		assert(tree.size() == newTree.size())
+		assert(tree.size == newTree.size)
 	}
 
 	test("merge 2 trees with nonoverlapping intervals") {
 		var totalRecs = 0
-		val tree1 = new IntervalTree[Long, Long]()
+		val tree1 = new IntervalTree[Long]()
 
-		for (id <- 1L to 10L) {
-			val partition: Long = id
-			val region = new ReferenceRegion("region", id , id + 1000L)
-			tree1.insert(region, (id, partition))
+		for (i <- 1L to 10L) {
+			val partition: Long = i
+			val region = new ReferenceRegion("region", i , i + 1000L)
+			tree1.insert(region, partition)
 			totalRecs += 1
 		}
 
-		val tree2 = new IntervalTree[Long, Long]()
+		val tree2 = new IntervalTree[Long]()
 
-		for (id <- 11L to 20L) {
-			val partition: Long = id
-			val region = new ReferenceRegion("region", id , id + 1000L)			
-			tree2.insert(region, (id, partition))
+		for (i <- 11L to 20L) {
+			val partition: Long = i
+			val region = new ReferenceRegion("region", i , i + 1000L)
+			tree2.insert(region, partition)
 			totalRecs += 1
 		}
 
 		val newTree = tree1.merge(tree2)
 		assert(newTree.size == totalRecs)
-	}		
-
-	// test edge cases
-	test("take snapshot of empty tree") {
-		val tree = new IntervalTree[Long, Long]()
-		val newTree = tree.snapshot()
 	}
 
 	test("search empty tree") {
-		val tree = new IntervalTree[Long, Long]()
+		val tree = new IntervalTree[Long]()
 
 		// create interval to search
 		val start = 0L
@@ -165,38 +141,32 @@ class IntervalTreeSuite extends FunSuite {
 		val region = new ReferenceRegion("region", start, end)
 
 		val ids: List[Long] = List(1L, 3L, 5L)
-		tree.search(region, ids)	
+		tree.search(region)
 	}
 
 	test("difference between insertRegion and insertNode: RefRegion is the same") {
-		val tree1 = new IntervalTree[Long, Long]()
-		val tree2 = new IntervalTree[Long, Long]()
-		val partitions = 10
+		val tree1 = new IntervalTree[Long]()
+		val tree2 = new IntervalTree[Long]()
 
 		val start = 0L
 		val end = 1000L
 		val region = new ReferenceRegion("region", start, end)
 		//all the data should go into just one node for regular insert
 		//but we should be left with 6 nodes for insertNode
-		for (id <- 1L to 6L) {
-			val partition: Long = start % partitions
-			tree1.insert(region, (id, partition))
-			val newNode = new Node[Long, Long](region)
-			newNode.put(id, partition)
+		for (i <- 1L to 6L) {
+			tree1.insert(region, i)
+			val newNode = new Node[Long](region)
+			newNode.put(i)
 			tree2.insertNode(newNode)
 		}
 
-		println("regular insert method tree size: " + tree1.size())
-		println("insertNode method tree size: " + tree2.size())
-		tree1.printNodes()
-		tree2.printNodes()
-		assert(tree1.size() == 1)
-		assert(tree2.size() == 1) //should be the same because the data is merged with the same region
+		assert(tree1.size == tree2.size)
+		assert(tree1.size == 6)
 	}
 
 	test("difference between insertRegion and insertNode: RefRegion is the different") {
-		val tree1 = new IntervalTree[Long, Long]()
-		val tree2 = new IntervalTree[Long, Long]()
+		val tree1 = new IntervalTree[Long]()
+		val tree2 = new IntervalTree[Long]()
 
 		//regions is smaller and smaller subsets
 		val reg1 = new ReferenceRegion("region", 0L, 1000L)
@@ -204,26 +174,22 @@ class IntervalTreeSuite extends FunSuite {
 		val reg3 = new ReferenceRegion("region", 300L, 700L)
 
 		//(region, (id, partitionNum))
-		tree1.insert(reg1, (1L, 1L))
-		val node1 = new Node[Long, Long](reg1)
-		node1.put(1L, 1L)
+		tree1.insert(reg1, 1L)
+		val node1 = new Node[Long](reg1)
+		node1.put(1L)
 		tree2.insertNode(node1)
 
-		tree1.insert(reg1, (2L, 2L))
-		val node2 = new Node[Long, Long](reg2)
-		node2.put(2L, 2L)
+		tree1.insert(reg1, 2L)
+		val node2 = new Node[Long](reg2)
+		node2.put(2L)
 		tree2.insertNode(node2)
 
-		tree1.insert(reg1, (3L, 3L))
-		val node3 = new Node[Long, Long](reg3)
-		node3.put(3L, 3L)
+		tree1.insert(reg1, 3L)
+		val node3 = new Node[Long](reg3)
+		node3.put(3L)
 		tree2.insertNode(node3)
 
-		println("regular insert method tree size: " + tree1.size())
-		println("insertNode method tree size: " + tree2.size())
-		tree1.printNodes()
-		tree2.printNodes()
-		assert(tree1.size() == 1)
-		assert(tree2.size() == 3)	
+		assert(tree1.size == tree2.size)
+		assert(tree2.size == 3)
 	}
 }

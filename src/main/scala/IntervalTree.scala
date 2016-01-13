@@ -15,36 +15,51 @@
  * limitations under the License.
  */
 
+ // TODO
+   // remove nulls
+   // why does count require tree traversal
+   // look at other implementations
+   // node data storage more efficient
+   // comment/clean
+
 package com.github.akmorrow13.intervaltree
 import scala.reflect.{ ClassTag, classTag }
 import scala.collection.mutable.ListBuffer
 import org.bdgenomics.adam.models.ReferenceRegion
 
-// k = type for entity id, T = value type stored in hashmap 
-class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
-  var root: Node[K, T] = null
+// k = type for entity id, T = value type stored in hashmap
+class IntervalTree[V: ClassTag] extends Serializable {
+  var root: Node[V] = null
   var leftDepth: Long = 0
   var rightDepth: Long = 0
   val threshold = 15
   var nodeCount: Long = 0
 
-  def snapshot(): IntervalTree[K, T] = {
-    val newTree: IntervalTree[K,T] = new IntervalTree[K, T]()
-    val nodes: List[Node[K, T]] = inOrder()
+  def snapshot(): IntervalTree[V] = {
+    val newTree: IntervalTree[V] = new IntervalTree[V]()
+    val nodes: List[Node[V]] = inOrder()
     newTree.insertRecursive(nodes)
     newTree
   }
 
-  def size(): Long = {
+  def get(): List[V] = {
+    inOrder().flatMap(r => r.get.toList)
+  }
+
+  def countNodes(): Long = {
     nodeCount
   }
 
-  def IntervalTree() = { 
+  def size(): Long = {
+    count
+  }
+
+  def IntervalTree() = {
     root = null
   }
 
-  def merge(nT: IntervalTree[K,T]): IntervalTree[K,T] = {
-    val newNodes: List[Node[K, T]] = nT.inOrder()
+  def merge(nT: IntervalTree[V]): IntervalTree[V] = {
+    val newNodes: List[Node[V]] = nT.inOrder()
     val newTree = this.snapshot()
     newTree.insertRecursive(newNodes)
     newTree
@@ -52,36 +67,37 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
 
   def printNodes(): Unit = {
     println("Printing all nodes in interval tree")
-    val nodes: List[Node[K, T]] = inOrder().sortWith(_.region.start < _.region.start)
-    nodes.foreach(r => println(r.region))
+    val nodes: List[Node[V]] = inOrder().sortWith(_.region.start < _.region.start)
+    nodes.foreach(r => {
+      println(r.region)
+      r.data.foreach(e => println(e))
+    })
   }
 
-  def insert(i: ReferenceRegion, r: (K, T)): Boolean  = {
-    insert(i, List(r))
+  def insert(r: ReferenceRegion, v: V): Boolean  = {
+    insert(r, Iterator(v))
   }
 
-  def insert(i: ReferenceRegion, r: List[(K, T)]): Boolean = {
-    insertRegion(i, r)
+  def insert(r: ReferenceRegion, vs: Iterator[V]): Boolean = {
+    insertRegion(r, vs)
     if (Math.abs(leftDepth - rightDepth) > threshold) {
       rebalance()
-    } 
+    }
     true
   }
 
-  /* 
+  /*
   * This method finds an existing node (keyed by ReferenceRegion) to insert the data into,
   * or creates a new node to insert it into the tree
-  */ 
-  private def insertRegion(region: ReferenceRegion, r: List[(K, T)]): Boolean  = {
+  */
+  private def insertRegion(region: ReferenceRegion, vs: Iterator[V])  = {
     if (root == null) {
       nodeCount += 1
-      root = new Node[K, T](region)
-      root.multiput(r)
-      return true
+      root = new Node[V](region)
+      root.multiput(vs)
     }
-    var curr: Node[K, T] = root
-    var parent: Node[K, T] = null
-    var inserted: Boolean = false
+    var curr: Node[V] = root
+    var parent: Node[V] = null
     var search: Boolean = true
     var leftSide: Boolean = false
     var rightSide: Boolean = false
@@ -99,92 +115,77 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
         curr = curr.leftChild
         if (curr == null) {
           curr = new Node(region)
-          curr.multiput(r)
+          curr.multiput(vs)
           parent.leftChild = curr
           nodeCount += 1
           search = false
-          inserted = true
         }
       } else if (curr.lessThan(region)) { //right traversal
-        if (!leftSide && !rightSide) { 
+        if (!leftSide && !rightSide) {
           rightSide = true
         }
         tempRightDepth += 1
         curr = curr.rightChild
         if (curr == null) {
           curr = new Node(region)
-          curr.multiput(r)
+          curr.multiput(vs)
           parent.rightChild= curr
-          nodeCount += 1         
+          nodeCount += 1
           search = false
-          inserted = true
         }
       } else { // insert new id, given id is not in tree
-        curr.multiput(r)
+        curr.multiput(vs)
+
         search = false
       }
     }
-    // done searching, now let's set our max depths
+    // done searching, set our max depths
     if (tempLeftDepth > leftDepth) {
       leftDepth = tempLeftDepth
     } else if (tempRightDepth > rightDepth) {
       rightDepth = tempRightDepth
     }
-    inserted
   }
 
   /* serches for single interval over single id */
-  def search(r: ReferenceRegion, id: K): List[(K, T)] = {
-    search(r, root, Option(List(id)))
-  } 
+  def search(r: ReferenceRegion): Iterator[V] = {
+    search(r, root)
+  }
 
-  /* searches for single interval over multiple ids */
-  def search(r: ReferenceRegion, ids: List[K]): List[(K, T)] = {
-    search(r, root, Option(ids))
-  } 
-
-  /* searches for single interval over multiple ids */
-  def search(r: ReferenceRegion): List[(K, T)] = {
-    search(r, root, None)
-  } 
-
-  private def search(r: ReferenceRegion, n: Node[K, T], id: Option[List[K]]): List[(K, T)] = {
-    val results = new ListBuffer[(K, T)]()
+  private def search(r: ReferenceRegion, n: Node[V]): Iterator[V] = {
+    val results = new ListBuffer[V]()
     if (n != null) {
       if (n.overlaps(r)) {
-        id match {
-          case Some(id) => results ++= n.multiget(id)
-          case None     => results ++= n.getAll()
-        }
+        results ++= n.get
       }
       if (n.subtreeMax < r.start) {
-        return results.toList
+        return results.distinct.toIterator
       }
       if (n.leftChild != null) {
-        results ++= search(r, n.leftChild, id)
+        results ++= search(r, n.leftChild)
       }
       if (n.rightChild != null) {
-        results ++= search(r, n.rightChild, id)
+        results ++= search(r, n.rightChild)
       }
     }
-    return results.toList.distinct
+    return results.distinct.toIterator
   }
 
   /*
   * This method is used for bulk insertions of Nodes into a tree,
   * specifically with regards to rebalancing
   * Note: this method only appends data to existing nodes if a node with the
-  *   same exact ReferenceRegion exists. In insertRegion, it will insert the data 
+  *   same exact ReferenceRegion exists. In insertRegion, it will insert the data
   *   if the ReferenceRegion is a subregion of a particular Node.
   */
-  def insertNode(n: Node[K, T]): Boolean = {
+  def insertNode(n: Node[V]): Boolean = {
    if (root == null) {
       root = n
       nodeCount += 1
       return true
     }
-    var curr: Node[K, T] = root
-    var parent: Node[K, T] = null
+    var curr: Node[V] = root
+    var parent: Node[V] = null
     var search: Boolean = true
     var leftSide: Boolean = false
     var rightSide: Boolean = false
@@ -212,11 +213,11 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
         curr = curr.rightChild
         if (curr == null) {
           parent.rightChild= n
-          nodeCount += 1         
+          nodeCount += 1
           search = false
         }
       } else { // attempting to replace a node already in tree. Merge
-        curr.multiput(n.getAll())
+        curr.multiput(n.get())
         search = false
       }
     }
@@ -229,7 +230,7 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     true
   }
 
-  private def insertRecursive(nodes: List[Node[K,T]]): Unit = {
+  private def insertRecursive(nodes: List[Node[V]]): Unit = {
     if (nodes == null) {
       return
     }
@@ -244,9 +245,10 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     }
   }
 
+
   // currently gets an inorder list of the tree, then bulk constructs a new tree
   private def rebalance() = {
-    val nodes: List[Node[K,T]] = inOrder()
+    val nodes: List[Node[V]] = inOrder()
     root = null
     nodeCount = 0
     val orderedList = nodes.sortWith(_.region.start < _.region.start)
@@ -254,12 +256,27 @@ class IntervalTree[K: ClassTag, T: ClassTag] extends Serializable {
     insertRecursive(orderedList)
   }
 
-  private def inOrder(): List[Node[K, T]] = {
+  private def inOrder(): List[Node[V]] = {
     return inOrder(root).toList
   }
 
-  private def inOrder(n: Node[K, T]): ListBuffer[Node[K, T]] = {
-    val seen = new ListBuffer[Node[K, T]]()
+  private def count(): Long = {
+    count(root)
+  }
+
+  private def count(n: Node[V]): Long = {
+    var total: Long = 0
+    if (n == null) {
+      return total
+    }
+    total += n.getSize
+    total += count(n.leftChild)
+    total += count(n.rightChild)
+    total
+  }
+
+  private def inOrder(n: Node[V]): ListBuffer[Node[V]] = {
+    val seen = new ListBuffer[Node[V]]()
     if (n == null) {
       return seen
     }
