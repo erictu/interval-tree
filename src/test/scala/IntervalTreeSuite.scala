@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.github.akmorrow13.intervaltree
+package com.github.erictu.intervaltree
 
 import org.scalatest.FunSuite
 import org.scalatest.Matchers

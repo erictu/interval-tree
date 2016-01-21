@@ -16,8 +16,8 @@
  */
 
 
-package com.github.akmorrow13.intervaltree
-import scala.reflect.ClassTag
+package com.github.erictu.intervaltree
+import scala.reflect.{ ClassTag, classTag }
 import scala.collection.mutable.ListBuffer
 import org.bdgenomics.adam.models.Interval
 
