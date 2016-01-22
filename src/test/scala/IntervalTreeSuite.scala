@@ -192,4 +192,18 @@ class IntervalTreeSuite extends FunSuite {
 		assert(tree1.size == tree2.size)
 		assert(tree2.size == 3)
 	}
+
+	test("general tree filter") {
+		val tree = new IntervalTree[ReferenceRegion, Long]()
+
+		val id = 1L
+		for (start <- 1L to 6L) {
+			val end = start + 500L
+			val region = new ReferenceRegion("chr1",  start, end)
+			tree.insert(region, start)
+		}
+		val filtTree = tree.treeFilt(elem => elem < 3)
+		assert(filtTree.size == 2)
+	}
+
 }
