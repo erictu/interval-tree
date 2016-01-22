@@ -57,6 +57,10 @@ class Node[K <: Interval, V: ClassTag](int: K) extends Serializable {
     data ++= newData
   }
 
+  def multiput(rs: List[V]) = {
+    data ++= rs
+  }
+
   def put(newData: V) = {
     data += newData
   }

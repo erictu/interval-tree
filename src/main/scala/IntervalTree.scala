@@ -146,6 +146,23 @@ class IntervalTree[K <: Interval, V: ClassTag] extends Serializable {
     search(r, root)
   }
 
+  /**
+   * Constructs a new tree by applying a predicate over the existing tree
+   */
+  def treeFilt(pred: V => Boolean): IntervalTree[K, V] = {
+    val orig: List[Node[K, V]] = inOrder()
+    var filt: ListBuffer[Node[K, V]] = new ListBuffer[Node[K, V]]()
+    orig.foreach(elem => {
+      val newNode: Node[K,V] = new Node(elem.interval)
+      newNode.multiput(elem.data.filter(pred).toList)
+      filt += newNode
+      })
+    val newTree: IntervalTree[K, V] = new IntervalTree[K, V]()
+    newTree.insertRecursive(filt.toList)
+    newTree
+  }
+
+
   private def search(r: K, n: Node[K, V]): Iterator[V] = {
     val results = new ListBuffer[V]()
     if (n != null) {
