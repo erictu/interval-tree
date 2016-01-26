@@ -206,4 +206,20 @@ class IntervalTreeSuite extends FunSuite {
 		assert(filtTree.size == 2)
 	}
 
+	test("general tree map") {
+		val tree = new IntervalTree[ReferenceRegion, Long]()
+
+		val id = 1L
+		for (start <- 1L to 3L) {
+			val end = start + 500L
+			val region = new ReferenceRegion("chr1",  start, end)
+			tree.insert(region, start)
+		}
+		tree.printNodes
+		println(tree.get())
+		val filtTree = tree.mapValues(elem => elem + 3L)
+		filtTree.printNodes
+		println(filtTree.get())		
+	}
+
 }

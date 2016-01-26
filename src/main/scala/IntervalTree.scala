@@ -147,6 +147,21 @@ class IntervalTree[K <: Interval, V: ClassTag] extends Serializable {
   }
 
   /**
+   * Used for map
+   */
+  def mapValues[V2: ClassTag](f: V => V2): IntervalTree[K, V2] = {
+    val newTree: IntervalTree[K, V2] = new IntervalTree[K, V2]()
+    var mappedList: ListBuffer[Node[K, V2]] = new ListBuffer[Node[K, V2]]()
+    inOrder.foreach(elem => {
+      val newNode: Node[K,V2] = new Node(elem.interval)
+      newNode.multiput(elem.data.map(f).toList)
+      mappedList += newNode
+      })
+    newTree.insertRecursive(mappedList.toList)
+    newTree
+  }
+
+  /**
    * Constructs a new tree by applying a predicate over the existing tree
    */
   def treeFilt(pred: V => Boolean): IntervalTree[K, V] = {
