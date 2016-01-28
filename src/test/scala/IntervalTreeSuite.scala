@@ -31,7 +31,7 @@ class IntervalTreeSuite extends FunSuite {
 		for (start <- 1L to 6L) {
 			val end = start + 500L
 			val region = new ReferenceRegion("chr1",  start, end)
-			tree.insert(region, (region, start))
+			tree.insert(region, start)
 		}
 		assert(tree.size == 6)
 	}
@@ -45,7 +45,7 @@ class IntervalTreeSuite extends FunSuite {
 			val end = start + 500L
 
 			val region = new ReferenceRegion("chr1",  start, end)
-			tree.insert(region, (region, start))
+			tree.insert(region, start)
 		}
 		assert(tree.get.size == 6)
 	}
@@ -59,10 +59,10 @@ class IntervalTreeSuite extends FunSuite {
 
 		for (i <- 1L to 6L) {
 			val value: Long = i
-			tree.insert(region, (region, value))
+			tree.insert(region, value)
 		}
 		val x = tree.search(region)
-		var searchAll: List[(ReferenceRegion, Long)] = tree.search(region).toList
+		var searchAll: List[Long] = tree.search(region).toList
 		assert(searchAll.size == 6)
 
 	}
@@ -70,7 +70,7 @@ class IntervalTreeSuite extends FunSuite {
 	test("insert in bulk with same interval") {
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 		val region = new ReferenceRegion("chr1",  0, 1000)
-		val r: Iterator[(ReferenceRegion, Long)] = Iterator((region, 2L), (region, 3L), (region, 4L))
+		val r: Iterator[Long] = Iterator(2L, 3L, 4L)
 		tree.insert(region, r)
 
 		assert(tree.size == 3)
@@ -84,7 +84,7 @@ class IntervalTreeSuite extends FunSuite {
 		for (i <- 1L to 50L) {
 			val partition: Long = i
 			val region = new ReferenceRegion("chr1",  i + 7L, i + 1000L)
-			tree.insert(region, (region, partition))
+			tree.insert(region, partition)
 		}
 
 		assert(tree.rightDepth - tree.leftDepth <= 16)
@@ -98,7 +98,7 @@ class IntervalTreeSuite extends FunSuite {
 		for (i <- 1L to 50L) {
 			val partition: Long = i
 			val region = new ReferenceRegion("chr1",  i + 7L, i + 1000L)
-			tree.insert(region, (region,partition))
+			tree.insert(region, partition)
 		}
 
 		val newTree = tree.snapshot()
@@ -112,7 +112,7 @@ class IntervalTreeSuite extends FunSuite {
 		for (i <- 1L to 10L) {
 			val partition: Long = i
 			val region = new ReferenceRegion("chr1",  i , i + 1000L)
-			tree1.insert(region, (region, partition))
+			tree1.insert(region, partition)
 			totalRecs += 1
 		}
 
@@ -121,7 +121,7 @@ class IntervalTreeSuite extends FunSuite {
 		for (i <- 11L to 20L) {
 			val partition: Long = i
 			val region = new ReferenceRegion("chr1",  i , i + 1000L)
-			tree2.insert(region, (region, partition))
+			tree2.insert(region, partition)
 			totalRecs += 1
 		}
 
@@ -151,9 +151,9 @@ class IntervalTreeSuite extends FunSuite {
 		//all the data should go into just one node for regular insert
 		//but we should be left with 6 nodes for insertNode
 		for (i <- 1L to 6L) {
-			tree1.insert(region, (region, i))
+			tree1.insert(region, i)
 			val newNode = new Node[ReferenceRegion, Long](region)
-			newNode.put(region, i)
+			newNode.put(i)
 			tree2.insertNode(newNode)
 		}
 
@@ -171,19 +171,19 @@ class IntervalTreeSuite extends FunSuite {
 		val reg3 = new ReferenceRegion("chr1",  300L, 700L)
 
 		//(region, (id, partitionNum))
-		tree1.insert(reg1, (reg1, 1L))
+		tree1.insert(reg1, 1L)
 		val node1 = new Node[ReferenceRegion, Long](reg1)
-		node1.put(reg1, 1L)
+		node1.put(1L)
 		tree2.insertNode(node1)
 
-		tree1.insert(reg1, (reg1, 2L))
+		tree1.insert(reg1, 2L)
 		val node2 = new Node[ReferenceRegion, Long](reg2)
-		node2.put(reg1, 2L)
+		node2.put(2L)
 		tree2.insertNode(node2)
 
-		tree1.insert(reg1, (reg1, 3L))
+		tree1.insert(reg1, 3L)
 		val node3 = new Node[ReferenceRegion, Long](reg3)
-		node3.put(reg3, 3L)
+		node3.put(3L)
 		tree2.insertNode(node3)
 
 		assert(tree1.size == tree2.size)
@@ -197,14 +197,15 @@ class IntervalTreeSuite extends FunSuite {
 		for (start <- 1L to 6L) {
 			val end = start + 500L
 			val region = new ReferenceRegion("chr1",  start, end)
-			tree.insert(region, (region, start))
+			tree.insert(region, start)
 		}
 		val filtTree = tree.treeFilt(elem => elem < 3)
 		assert(filtTree.size == 2)
 	}
 
 	test("general tree map") {
-		val tree = new IntervalTree[ReferenceRegion, Long]()
+		//simulates putting block sizes
+		val tree = new IntervalTree[ReferenceRegion, (ReferenceRegion, Long)]()
 
 		val id = 1L
 		for (start <- 1L to 3L) {
@@ -212,11 +213,13 @@ class IntervalTreeSuite extends FunSuite {
 			val region = new ReferenceRegion("chr1",  start, end)
 			tree.insert(region, (region, start))
 		}
-		tree.printNodes
-		println(tree.get())
-		val filtTree = tree.mapValues(elem => elem + 3L)
-		filtTree.printNodes
-		println(filtTree.get())		
+		// tree.printNodes
+		// println(tree.get())
+		val filtTree = tree.mapValues(elem => elem._2 + 3L)
+		assert(filtTree.size == 3)
+		assert(filtTree.get()(0) == 5)
+		// filtTree.printNodes
+		// println(filtTree.get())		
 	}
 
 }

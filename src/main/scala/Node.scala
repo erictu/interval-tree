@@ -22,17 +22,17 @@ import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 import org.bdgenomics.adam.models.Interval
 
-class Node[K <: Interval, V: ClassTag](int: K) extends Serializable {
+class Node[K <: Interval, T: ClassTag](int: K) extends Serializable {
   val interval: K = int
-  var leftChild: Node[K, V] = null
-  var rightChild: Node[K, V] = null
+  var leftChild: Node[K, T] = null
+  var rightChild: Node[K, T] = null
   var subtreeMax = int.end
 
 
   // DATA SHOULD BE STORED MORE EFFICIENTLY
-  var data: ListBuffer[(K, V)] = new ListBuffer()
+  var data: ListBuffer[T] = new ListBuffer()
 
-  def this(itvl: K, data: (K, V)) = {
+  def this(itvl: K, data: T) = {
     this(itvl)
     put(data)
   }
@@ -41,8 +41,8 @@ class Node[K <: Interval, V: ClassTag](int: K) extends Serializable {
     data.length
   }
 
-  override def clone: Node[K, V] = {
-    val n: Node[K, V] = new Node(interval)
+  override def clone: Node[K, T] = {
+    val n: Node[K, T] = new Node(interval)
     n.data = data
     n
   }
@@ -52,20 +52,20 @@ class Node[K <: Interval, V: ClassTag](int: K) extends Serializable {
     rightChild = null
   }
 
-  def multiput(rs: Iterator[(K, V)]) = {
+  def multiput(rs: Iterator[T]) = {
     val newData = rs.toList
     data ++= newData
   }
 
-  def multiput(rs: List[(K, V)]) = {
+  def multiput(rs: List[T]) = {
     data ++= rs
   }
 
-  def put(newData: (K, V)) = {
+  def put(newData: T) = {
     data += newData
   }
 
-  def get(): Iterator[(K, V)] = data.toIterator
+  def get(): Iterator[T] = data.toIterator
 
   def greaterThan(other: K): Boolean = {
       interval.start > other.start
