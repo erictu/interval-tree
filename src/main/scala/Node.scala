@@ -19,28 +19,30 @@ package com.github.akmorrow13.intervaltree
 
 import collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
-import org.bdgenomics.adam.models.ReferenceRegion
+import scala.reflect.ClassTag
+import org.bdgenomics.adam.models.Interval
 
-class Node[V](r: ReferenceRegion) extends Serializable {
-  val region = r
-  var leftChild: Node[V] = null
-  var rightChild: Node[V] = null
-  var subtreeMax = region.end
+class Node[K <: Interval, V: ClassTag](int: K) extends Serializable {
+  val interval: K = int
+  var leftChild: Node[K, V] = null
+  var rightChild: Node[K, V] = null
+  var subtreeMax = int.end
+
 
   // DATA SHOULD BE STORED MORE EFFICIENTLY
-  var data: ListBuffer[V] = new ListBuffer()
+  var data: ListBuffer[(K, V)] = new ListBuffer()
 
-  def this(i: ReferenceRegion, t: V) = {
-    this(i)
-    put(t)
+  def this(itvl: K, data: (K, V)) = {
+    this(itvl)
+    put(data)
   }
 
   def getSize(): Long = {
     data.length
   }
 
-  override def clone: Node[V] = {
-    val n: Node[V] = new Node(region)
+  override def clone: Node[K, V] = {
+    val n: Node[K, V] = new Node(interval)
     n.data = data
     n
   }
@@ -50,35 +52,35 @@ class Node[V](r: ReferenceRegion) extends Serializable {
     rightChild = null
   }
 
-  // TODO: these methods should eventually be moved to ReferenceRegion class
-  def greaterThan(other: ReferenceRegion): Boolean = {
-    region.referenceName == other.referenceName &&
-      region.start > other.start
-  }
-
-  def equals(other: ReferenceRegion): Boolean = {
-    region.referenceName == other.referenceName &&
-      (region.start == other.start && region.end == other.end)
-  }
-
-  def lessThan(other: ReferenceRegion): Boolean = {
-    region.referenceName == other.referenceName &&
-      region.start < other.start
-  }
-
-  def overlaps(other: ReferenceRegion): Boolean = {
-    region.overlaps(other)
-  }
-
-  def multiput(rs: Iterator[V]) = {
+  def multiput(rs: Iterator[(K, V)]) = {
     val newData = rs.toList
     data ++= newData
   }
 
-  def put(newData: V) = {
+  def multiput(rs: List[(K, V)]) = {
+    data ++= rs
+  }
+
+  def put(newData: (K, V)) = {
     data += newData
   }
 
-  def get(): Iterator[V] = data.toIterator
+  def get(): Iterator[(K, V)] = data.toIterator
+
+  def greaterThan(other: K): Boolean = {
+      interval.start > other.start
+  }
+
+  def equals(other: K): Boolean = {
+      (interval.start == other.start && interval.end == other.end)
+  }
+
+  def lessThan(other: K): Boolean = {
+      interval.start < other.start
+  }
+
+  def overlaps(other: K): Boolean = {
+    interval.start <= other.end && interval.end >= other.start
+  }
 
 }
