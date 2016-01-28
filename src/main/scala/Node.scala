@@ -30,11 +30,11 @@ class Node[K <: Interval, V: ClassTag](int: K) extends Serializable {
 
 
   // DATA SHOULD BE STORED MORE EFFICIENTLY
-  var data: ListBuffer[V] = new ListBuffer()
+  var data: ListBuffer[(K, V)] = new ListBuffer()
 
-  def this(int: K, t: V) = {
-    this(int)
-    put(t)
+  def this(itvl: K, data: (K, V)) = {
+    this(itvl)
+    put(data)
   }
 
   def getSize(): Long = {
@@ -52,20 +52,20 @@ class Node[K <: Interval, V: ClassTag](int: K) extends Serializable {
     rightChild = null
   }
 
-  def multiput(rs: Iterator[V]) = {
+  def multiput(rs: Iterator[(K, V)]) = {
     val newData = rs.toList
     data ++= newData
   }
 
-  def multiput(rs: List[V]) = {
+  def multiput(rs: List[(K, V)]) = {
     data ++= rs
   }
 
-  def put(newData: V) = {
+  def put(newData: (K, V)) = {
     data += newData
   }
 
-  def get(): Iterator[V] = data.toIterator
+  def get(): Iterator[(K, V)] = data.toIterator
 
   def greaterThan(other: K): Boolean = {
       interval.start > other.start
