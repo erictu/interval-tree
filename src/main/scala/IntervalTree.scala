@@ -199,6 +199,7 @@ class IntervalTree[K <: Interval, V: ClassTag] extends Serializable {
     return results.distinct.toIterator
   }
 
+
   /*
   * This method is used for bulk insertions of Nodes into a tree,
   * specifically with regards to rebalancing
