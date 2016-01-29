@@ -25,6 +25,7 @@ import org.bdgenomics.adam.models.ReferenceRegion
 class IntervalTreeSuite extends FunSuite {
 
 	test("insert regions to intervaltree") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 
 		val id = 1L
@@ -34,10 +35,12 @@ class IntervalTreeSuite extends FunSuite {
 			tree.insert(region, start)
 		}
 		assert(tree.size == 6)
+		
 	}
 
 
 	test("get all data from tree") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 
 		val id = 1L
@@ -48,9 +51,11 @@ class IntervalTreeSuite extends FunSuite {
 			tree.insert(region, start)
 		}
 		assert(tree.get.size == 6)
+
 	}
 
 	test("insert different regions into same node, tests search") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 
 		val start = 0L
@@ -68,6 +73,7 @@ class IntervalTreeSuite extends FunSuite {
 	}
 
 	test("insert in bulk with same interval") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 		val region = new ReferenceRegion("chr1",  0, 1000)
 		val r: Iterator[Long] = Iterator(2L, 3L, 4L)
@@ -79,6 +85,7 @@ class IntervalTreeSuite extends FunSuite {
 	}
 
 	test("rebalancing tree") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 
 		for (i <- 1L to 50L) {
@@ -93,6 +100,7 @@ class IntervalTreeSuite extends FunSuite {
 	}
 
 	test("clone tree") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 
 		for (i <- 1L to 50L) {
@@ -103,9 +111,11 @@ class IntervalTreeSuite extends FunSuite {
 
 		val newTree = tree.snapshot()
 		assert(tree.size == newTree.size)
+
 	}
 
 	test("merge 2 trees with nonoverlapping intervals") {
+
 		var totalRecs = 0
 		val tree1 = new IntervalTree[ReferenceRegion, Long]()
 
@@ -127,9 +137,11 @@ class IntervalTreeSuite extends FunSuite {
 
 		val newTree = tree1.merge(tree2)
 		assert(newTree.size == totalRecs)
+
 	}
 
 	test("search empty tree") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 
 		// create interval to search
@@ -139,9 +151,11 @@ class IntervalTreeSuite extends FunSuite {
 
 		val ids: List[Long] = List(1L, 3L, 5L)
 		tree.search(region)
+
 	}
 
 	test("difference between insertRegion and insertNode: RefRegion is the same") {
+
 		val tree1 = new IntervalTree[ReferenceRegion, Long]()
 		val tree2 = new IntervalTree[ReferenceRegion, Long]()
 
@@ -159,9 +173,11 @@ class IntervalTreeSuite extends FunSuite {
 
 		assert(tree1.size == tree2.size)
 		assert(tree1.size == 6)
+
 	}
 
 	test("difference between insertRegion and insertNode: RefRegion is the different") {
+
 		val tree1 = new IntervalTree[ReferenceRegion, Long]()
 		val tree2 = new IntervalTree[ReferenceRegion, Long]()
 
@@ -188,9 +204,11 @@ class IntervalTreeSuite extends FunSuite {
 
 		assert(tree1.size == tree2.size)
 		assert(tree2.size == 3)
+
 	}
 
 	test("general tree filter") {
+
 		val tree = new IntervalTree[ReferenceRegion, Long]()
 
 		val id = 1L
@@ -201,9 +219,11 @@ class IntervalTreeSuite extends FunSuite {
 		}
 		val filtTree = tree.treeFilt(elem => elem < 3)
 		assert(filtTree.size == 2)
+
 	}
 
 	test("general tree map") {
+
 		//simulates putting block sizes
 		val tree = new IntervalTree[ReferenceRegion, (ReferenceRegion, Long)]()
 
@@ -213,13 +233,10 @@ class IntervalTreeSuite extends FunSuite {
 			val region = new ReferenceRegion("chr1",  start, end)
 			tree.insert(region, (region, start))
 		}
-		// tree.printNodes
-		// println(tree.get())
 		val filtTree = tree.mapValues(elem => elem._2 + 3L)
 		assert(filtTree.size == 3)
 		assert(filtTree.get()(0) == 5)
-		// filtTree.printNodes
-		// println(filtTree.get())		
+	
 	}
 
 }
