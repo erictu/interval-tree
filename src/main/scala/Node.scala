@@ -80,7 +80,7 @@ class Node[K <: Interval, T: ClassTag](int: K) extends Serializable {
   }
 
   def overlaps(other: K): Boolean = {
-    interval.start <= other.end && interval.end >= other.start
+    interval.start < other.end && interval.end > other.start
   }
 
 }
