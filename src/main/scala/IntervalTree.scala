@@ -141,7 +141,7 @@ class IntervalTree[K <: Interval, T: ClassTag] extends Serializable {
     }
   }
 
-  /* serches for single interval over single id */
+  /* searches for single interval over single id */
   def search(r: K): Iterator[T] = {
     search(r, root)
   }
