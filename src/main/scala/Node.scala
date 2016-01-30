@@ -19,58 +19,68 @@ package com.github.akmorrow13.intervaltree
 
 import collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
+import scala.reflect.ClassTag
+import org.bdgenomics.adam.models.Interval
 
-class Node[K, T](r: (Interval[Long], T)) {
-  val lo = r._1.start
-  val hi = r._1.end
+class Node[K <: Interval, T: ClassTag](int: K) extends Serializable {
+  val interval: K = int
   var leftChild: Node[K, T] = null
   var rightChild: Node[K, T] = null
-  var subtreeMax = hi
-  var dataMap: HashMap[K, T] = new HashMap() 
-  var value = r._2
-  //TODO: Do we assume everything we insert has data attached?
-  // def this(r: Interval[Long]) = {
-  //   this((r, T))
-  // }
+  var subtreeMax = int.end
 
-  def greaterThan(r: (Interval[Long], T)): Boolean = {
-    return lo > r._1.start 
+
+  // DATA SHOULD BE STORED MORE EFFICIENTLY
+  var data: ListBuffer[T] = new ListBuffer()
+
+  def this(itvl: K, data: T) = {
+    this(itvl)
+    put(data)
   }
 
-  def lessThan(r: (Interval[Long], T)): Boolean = {
-    return lo < r._1.start 
+  def getSize(): Long = {
+    data.length
   }
 
-  //Only used in search, so no data value
-  def overlaps(r: Interval[Long]): Boolean = {
-    return r.start <= hi && r.end >= lo
+  override def clone: Node[K, T] = {
+    val n: Node[K, T] = new Node(interval)
+    n.data = data
+    n
   }
 
-  def equals(r: (Interval[Long], T)): Boolean = {
-    return r._1.start == lo && r._1.end == hi
+  def clearChildren() = {
+    leftChild = null
+    rightChild = null
   }
 
-  def multiput(rs: List[(K, T)]) = {
-    rs.foreach(r => put(r._1, r._2) )
+  def multiput(rs: Iterator[T]) = {
+    val newData = rs.toList
+    data ++= newData
   }
 
-  def put(id: K, data: T) = {
-    dataMap += (id -> data)
+  def multiput(rs: List[T]) = {
+    data ++= rs
   }
 
-  //Keep it like this for now until we decide what better representation to return
-  def getValue(): T  = {
-    value
+  def put(newData: T) = {
+    data += newData
   }
 
-  def multiget(ids: List[K]): List[T] = {
-    var data = new ListBuffer[T]()
-    ids.foreach(data += get(_))
-    data.toList
+  def get(): Iterator[T] = data.toIterator
+
+  def greaterThan(other: K): Boolean = {
+      interval.start > other.start
   }
 
-  def get(id: K): T = {
-    dataMap(id)
+  def equals(other: K): Boolean = {
+      (interval.start == other.start && interval.end == other.end)
+  }
+
+  def lessThan(other: K): Boolean = {
+      interval.start < other.start
+  }
+
+  def overlaps(other: K): Boolean = {
+    interval.start < other.end && interval.end > other.start
   }
 
 }
