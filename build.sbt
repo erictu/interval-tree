@@ -22,13 +22,6 @@ pomIncludeRepository := { _ => false }
 
 pomExtra := (
   <url>http://github.com/erictu/interval-tree</url>
-  <licenses>
-    <license>
-      <name>BSD-style</name>
-      <url>http://www.opensource.org/licenses/bsd-license.php</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
   <scm>
     <url>git@github.com:erictu/interval-tree.git</url>
     <connection>scm:git:git@github.com:erictu/interval-tree.git</connection>
@@ -39,10 +32,12 @@ pomExtra := (
       <name>Eric Tu</name>
       <url>http://github.com/erictu</url>
     </developer>
+    <developer>
+      <id>akmorrow13</id>
+      <name>Alyssa Morrow</name>
+      <url>http://github.com/akmorrow13</url>
+    </developer>
   </developers>)
-
-
-
 
 licenses += "Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")
 
